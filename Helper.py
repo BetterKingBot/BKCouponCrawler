@@ -95,7 +95,7 @@ def shortenProductNames(couponTitle: str) -> str:
     couponTitle = re.sub(r"große(\s*KING)?\s*Pommes", r"L" + pommesReplacement, couponTitle, flags=re.IGNORECASE)
     """ Just in case we missed one fries-case... """
     couponTitle = re.sub(r"KING\s*(Pommes)", pommesReplacement, couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Coca[\s-]*Cola", colaReplacement, couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"(Coca[\s-]*)?Cola", colaReplacement, couponTitle, flags=re.IGNORECASE)
     """ E.g. "Big KING" --> "Big K" """
     couponTitle = re.sub(r"(Big|Bacon|Fish|Halloumi)\s*KING", r"\1", couponTitle, flags=re.IGNORECASE)
     """ E.g. "KING Shake" --> "Shake" """
@@ -116,7 +116,6 @@ def shortenProductNames(couponTitle: str) -> str:
     couponTitle = re.sub(r"Cheddar\s*Cheese", r"Cheddar", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Chicken", r"Ckn", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Chili[\s-]*Cheese", r"CC", couponTitle, flags=re.IGNORECASE)
-    # couponTitle = re.sub(r"Coca[\s-]*Cola", r"Cola", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Deluxe", r"Dlx", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Dips", r"Dip", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Double", r"Dbl", couponTitle, flags=re.IGNORECASE)
