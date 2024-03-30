@@ -290,6 +290,9 @@ def couponTitleContainsVeggieFood(title: str) -> bool:
         return True
     elif '+' not in titleLower and 'brownie' in titleLower:
         return True
+    elif '+' not in titleLower and 'potatoe' in titleLower:
+        # Country Potatoes
+        return True
     else:
         # Non veggie menus and all the stuff that this handling doesn't detect properly yet
         return False
