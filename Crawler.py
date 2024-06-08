@@ -16,10 +16,9 @@ from Helper import *
 from Helper import getPathImagesOffers, getPathImagesProducts, \
     isValidImageFile, CouponType, Paths
 from UtilsOffers import offerGetImagePath, offerIsValid
-from UtilsCouponsDB import Coupon, InfoEntry, CouponFilter, getCouponTitleMapping, User, removeDuplicatedCoupons, sortCoupons
+from UtilsCouponsDB import Coupon, InfoEntry, CouponFilter, getCouponTitleMapping, User, removeDuplicatedCoupons, sortCoupons, CouponTextRepresentationPLUMode
 from CouponCategory import CouponCategory
 
-HEADERS_OLD = {"User-Agent": "BurgerKing/6.7.0 (de.burgerking.kingfinder; build:432; Android 8.0.0) okhttp/3.12.3"}
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
            "Origin": "https://www.burgerking.de",
            "Content-Type": "application/json",
@@ -265,144 +264,153 @@ class BKCrawler:
         couponArrayBK = apiResponse['data']['LoyaltyOffersUI']['sortedSystemwideOffers']
         appCoupons = []
         appCouponsNotYetActive = []
-        for couponBKTmp in couponArrayBK:
-            bkCoupons = [couponBKTmp]
-            # Collect hidden coupons
-            upsellOptions = couponBKTmp.get('upsellOptions')
-            if upsellOptions is not None:
-                for upsellOption in upsellOptions:
-                    upsellID = upsellOption.get('_id')
-                    upsellType = upsellOption.get('_type')
-                    upsellShortCode = upsellOption.get('shortCode')
-                    if upsellType != 'offer' or upsellShortCode is None:
-                        # Skip invalid items: This should never happen
-                        logging.info(f"Found invalid/unsupported upsell object: {upsellID=}")
-                        continue
-                    bkCoupons.append(upsellOption)
-            index = 0
-            for couponBK in bkCoupons:
-                uniqueCouponID = couponBK['vendorConfigs']['rpos']['constantPlu']
-                legacyInternalName = couponBK.get('internalName')
-                # Find coupon-title. Prefer to get it from 'internalName' as the other title may contain crap we don't want.
-                # 2022-11-02: Prefer normal titles again because internal ones are sometimes incomplete
-                useInternalNameAsTitle = False
-                legacyInternalNameRegex = None
-                if legacyInternalName is not None:
-                    legacyInternalNameRegex = re.compile(r'[A-Za-z0-9]+_\d+_(?:UPSELL_|CRM_MYBK_|MYBK_|\d{3,}_)?(.+)').search(legacyInternalName)
-                subtitle = None
-                try:
-                    subtitle = couponBK['description']['localeRaw'][0]['children'][0]['text']
-                except:
-                    pass
-                if legacyInternalNameRegex is not None and useInternalNameAsTitle:
-                    titleFull = legacyInternalNameRegex.group(1)
-                    titleFull = titleFull.replace('_', ' ')
-                else:
-                    """ Decide how to use title and subtitle and if it makes sense to put both into one string. """
-                    title = couponBK['name']['localeRaw'][0]['children'][0]['text']
-                    title = title.strip()
-                    if subtitle is None:
-                        titleFull = title
+        totalindex = 0
+        childindex = 0
+        try:
+            for couponBKTmp in couponArrayBK:
+                bkCoupons = [couponBKTmp]
+                # Collect hidden coupons
+                upsellOptions = couponBKTmp.get('upsellOptions')
+                if upsellOptions is not None:
+                    for upsellOption in upsellOptions:
+                        upsellID = upsellOption.get('_id')
+                        upsellType = upsellOption.get('_type')
+                        upsellShortCode = upsellOption.get('shortCode')
+                        if upsellType != 'offer' or upsellShortCode is None:
+                            # Skip invalid items: This should never happen
+                            logging.info(f"Found invalid/unsupported upsell object: {upsellID=}")
+                            continue
+                        bkCoupons.append(upsellOption)
+                childindex = 0
+                for couponBK in bkCoupons:
+                    vendorConfigs = couponBK['vendorConfigs']
+                    try:
+                        uniqueCouponID = vendorConfigs['rpos']['constantPlu']
+                    except:
+                        uniqueCouponID = vendorConfigs['partner']['constantPlu']
+                    legacyInternalName = couponBK.get('internalName')
+                    # Find coupon-title. Prefer to get it from 'internalName' as the other title may contain crap we don't want.
+                    # 2022-11-02: Prefer normal titles again because internal ones are sometimes incomplete
+                    useInternalNameAsTitle = False
+                    legacyInternalNameRegex = None
+                    if legacyInternalName is not None:
+                        legacyInternalNameRegex = re.compile(r'[A-Za-z0-9]+_\d+_(?:UPSELL_|CRM_MYBK_|MYBK_|\d{3,}_)?(.+)').search(legacyInternalName)
+                    subtitle = None
+                    try:
+                        subtitle = couponBK['description']['localeRaw'][0]['children'][0]['text']
+                    except:
+                        # Subtitle is not always available
+                        pass
+                    if subtitle is not None and 'QR' in subtitle:
+                        print("WTF")
+                    if legacyInternalNameRegex is not None and useInternalNameAsTitle:
+                        titleFull = legacyInternalNameRegex.group(1)
+                        titleFull = titleFull.replace('_', ' ')
                     else:
-                        subtitle = subtitle.strip()
-                        titleShortened = shortenProductNames(title)
-                        subtitleShortened = shortenProductNames(subtitle)
-                        if len(subtitleShortened) == 0 or subtitleShortened.isspace():
-                            # Useless subtitle -> Use title only
-                            titleFull = title
-                        elif len(titleShortened) == 0 or titleShortened.isspace():
-                            # Useless title -> Use subtitle only
-                            titleFull = subtitle
-                        elif titleShortened == subtitleShortened:  # Small hack: Shorten titles before comparing them
-                            # Title and subtitle are the same -> Use title only
+                        """ Decide how to use title and subtitle and if it makes sense to put both into one string. """
+                        title = couponBK['name']['localeRaw'][0]['children'][0]['text']
+                        title = title.strip()
+                        if subtitle is None:
                             titleFull = title
                         else:
-                            # Assume that subtitle is usable and put both together
-                            titleFull = title + ' ' + subtitle
-                            # Log seemingly strange values
-                            if not subtitle.startswith('+'):
-                                logging.info(f'Coupon {uniqueCouponID}: Possible subtitle which should not be included in coupon title: {subtitle=} | {title=} | {titleFull=}')
+                            subtitle = subtitle.strip()
+                            titleShortened = shortenProductNames(title)
+                            subtitleShortened = shortenProductNames(subtitle)
+                            if len(subtitleShortened) == 0 or subtitleShortened.isspace():
+                                # Useless subtitle -> Use title only
+                                titleFull = title
+                            elif len(titleShortened) == 0 or titleShortened.isspace():
+                                # Useless title -> Use subtitle only
+                                titleFull = subtitle
+                            elif titleShortened == subtitleShortened:  # Small hack: Shorten titles before comparing them
+                                # Title and subtitle are the same -> Use title only
+                                titleFull = title
+                            else:
+                                # Assume that subtitle is usable and put both together
+                                titleFull = title + ' ' + subtitle
+                                # Log seemingly strange values
+                                if not subtitle.startswith('+'):
+                                    logging.info(f'Coupon {uniqueCouponID}: Possible subtitle which should not be included in coupon title because it doesnt start with a plus sumbol: {subtitle=} | {title=} | {titleFull=}')
+                                elif '+' not in subtitle:
+                                    logging.info(f'Coupon {uniqueCouponID}: Possible subtitle which should not be included in coupon title because it doesnt contain a plus symbol: {subtitle=} | {title=} | {titleFull=}')
 
-                titleFull = sanitizeCouponTitle(titleFull)
-                price = couponBK['offerPrice']
-                plu = couponBK['shortCode']
-                coupon = Coupon(id=uniqueCouponID, uniqueID=uniqueCouponID, plu=plu, title=titleFull, subtitle=subtitle, titleShortened=shortenProductNames(titleFull),
-                                type=CouponType.APP)
-                coupon.webviewID = couponBK.get('loyaltyEngineId')
-                # TODO: Check where those tags are located in new API endpoint
-                offerTags = couponBK.get('offerTags')
-                if offerTags is not None and len(offerTags) > 0:
-                    # 2023-01-09: Looks like this field doesn't exist anymore
-                    tagsStringArray = []
-                    for offerTag in offerTags:
-                        tagsStringArray.append(offerTag['value'])
-                    coupon.tags = tagsStringArray
-                if index > 0:
-                    # First item = Real coupon, all others = upsell/"hidden" coupon(s)
-                    coupon.isHidden = True
-                if price == 0:
-                    # Special detection for some 50%/2for1 coupons that are listed with price == 0€
-                    if titleFull.startswith('2'):
-                        # E.g. 2 Crispy Chicken
-                        coupon.staticReducedPercent = 50
-                    else:
-                        # While it is super unlikely let's allow BK to provide coupons for free products :)
-                        coupon.price = 0
-                else:
-                    coupon.price = price
-                # Build URL to coupon product image
-                imageurl = couponBK['localizedImage']['locale']['app']['asset']['_id']
-                imageurl = "https://cdn.sanity.io/images/czqk28jt/prod_bk_de/" + imageurl.replace('image-', '')
-                imageurl = imageurl.replace('-png', '.png')
-                coupon.imageURL = imageurl
-                """ Find and set start- and expire-date.
-                 """
-                datetimeExpire1 = None
-                datetimeExpire2 = None
-                datetimeStart = None
-                try:
-                    footnote = couponBK['moreInfo']['localeRaw'][0]['children'][0]['text']
-                    expiredateRegex = re.compile(r'(?i)Abgabe bis (\d{1,2}\.\d{1,2}\.\d{4})').search(footnote)
-                    if expiredateRegex is not None:
-                        expiredateStr = expiredateRegex.group(1) + ' 23:59:59'
-                        datetimeExpire1 = datetime.strptime(expiredateStr, '%d.%m.%Y %H:%M:%S')
-                except:
-                    # Dontcare
-                    logging.warning('Failed to find BetterExpiredate for coupon: ' + coupon.id)
-                rulesHere = couponBK.get('rules')
-                if rulesHere is not None:
-                    rulesAll = []
-                    for ruleSet in rulesHere:
-                        ruleSetsChilds = ruleSet.get('rules')
-                        if ruleSetsChilds is not None:
-                            for ruleSetsChild in ruleSetsChilds:
-                                rulesAll.append(ruleSetsChild)
+                    titleFull = sanitizeCouponTitle(titleFull)
+                    price = couponBK['offerPrice']
+                    plu = couponBK['shortCode']
+                    coupon = Coupon(id=uniqueCouponID, uniqueID=uniqueCouponID, plu=plu, title=titleFull, subtitle=subtitle, titleShortened=shortenProductNames(titleFull),
+                                    type=CouponType.APP)
+                    # ID which can be used to view coupon in browser
+                    coupon.webviewID = couponBK.get('loyaltyEngineId')
+                    if childindex > 0:
+                        # First item = Real coupon, all others = upsell/"hidden" coupon(s)
+                        coupon.isHidden = True
+                    if price == 0:
+                        # Special detection for some 50%/2for1 coupons that are listed with price == 0€
+                        if titleFull.startswith('2'):
+                            # E.g. 2 Crispy Chicken
+                            coupon.staticReducedPercent = 50
                         else:
-                            rulesAll.append(ruleSet)
-                    dateformatStart = '%Y-%m-%d'
-                    dateformatEnd = '%Y-%m-%d %H:%M:%S'
-                    for rule in rulesAll:
-                        if rule['__typename'] == 'LoyaltyBetweenDates':
-                            datetimeStart = datetime.strptime(rule['startDate'], dateformatStart)
-                            datetimeExpire2 = datetime.strptime(rule['endDate'] + ' 23:59:59', dateformatEnd)
-                            break
-                else:
-                    logging.info(f'Coupon without rules field: {coupon.id}')
-                if datetimeExpire1 is None and datetimeExpire2 is None:
-                    # This should never happen
-                    logging.warning(f'WTF failed to find any expiredate for coupon: {uniqueCouponID}')
-                elif datetimeExpire1 is not None:
-                    # Prefer this expiredate
-                    coupon.timestampExpire = datetimeExpire1.timestamp()
-                else:
-                    coupon.timestampExpire = datetimeExpire2.timestamp()
-                if datetimeStart is not None:
-                    coupon.timestampStart = datetimeStart.timestamp()
-                crawledCouponsDict[uniqueCouponID] = coupon
-                appCoupons.append(coupon)
-                if datetimeStart is not None and datetimeStart > datetime.now():
-                    appCouponsNotYetActive.append(coupon)
-                index += 1
+                            # While it is super unlikely let's allow BK to provide coupons for free products :)
+                            coupon.price = 0
+                    else:
+                        coupon.price = price
+                    # Build URL to coupon product image
+                    imageurl = couponBK['localizedImage']['locale']['app']['asset']['_id']
+                    imageurl = "https://cdn.sanity.io/images/czqk28jt/prod_bk_de/" + imageurl.replace('image-', '')
+                    imageurl = imageurl.replace('-png', '.png')
+                    coupon.imageURL = imageurl
+                    """ Find and set start- and expire-date.
+                     """
+                    datetimeExpire1 = None
+                    datetimeExpire2 = None
+                    datetimeStart = None
+                    try:
+                        footnote = couponBK['moreInfo']['localeRaw'][0]['children'][0]['text']
+                        expiredateRegex = re.compile(r'(?i)Abgabe bis (\d{1,2}\.\d{1,2}\.\d{4})').search(footnote)
+                        if expiredateRegex is not None:
+                            expiredateStr = expiredateRegex.group(1) + ' 23:59:59'
+                            datetimeExpire1 = datetime.strptime(expiredateStr, '%d.%m.%Y %H:%M:%S')
+                    except:
+                        # Dontcare
+                        logging.warning('Failed to find BetterExpiredate for coupon: ' + coupon.id)
+                    rulesHere = couponBK.get('rules')
+                    if rulesHere is not None:
+                        rulesAll = []
+                        for ruleSet in rulesHere:
+                            ruleSetsChilds = ruleSet.get('rules')
+                            if ruleSetsChilds is not None:
+                                for ruleSetsChild in ruleSetsChilds:
+                                    rulesAll.append(ruleSetsChild)
+                            else:
+                                rulesAll.append(ruleSet)
+                        dateformatStart = '%Y-%m-%d'
+                        dateformatEnd = '%Y-%m-%d %H:%M:%S'
+                        for rule in rulesAll:
+                            if rule['__typename'] == 'LoyaltyBetweenDates':
+                                datetimeStart = datetime.strptime(rule['startDate'], dateformatStart)
+                                datetimeExpire2 = datetime.strptime(rule['endDate'] + ' 23:59:59', dateformatEnd)
+                                break
+                    else:
+                        logging.info(f'Coupon without rules field: {coupon.id}')
+                    if datetimeExpire1 is None and datetimeExpire2 is None:
+                        # This should never happen
+                        raise Exception(f'WTF failed to find any expiredate for coupon: {uniqueCouponID}')
+                    if datetimeExpire1 is not None:
+                        # Prefer this expiredate
+                        coupon.timestampExpire = datetimeExpire1.timestamp()
+                    else:
+                        coupon.timestampExpire = datetimeExpire2.timestamp()
+                    if datetimeStart is not None:
+                        coupon.timestampStart = datetimeStart.timestamp()
+                    crawledCouponsDict[uniqueCouponID] = coupon
+                    appCoupons.append(coupon)
+                    if datetimeStart is not None and datetimeStart > datetime.now():
+                        appCouponsNotYetActive.append(coupon)
+                    childindex += 1
+                    totalindex += 1
+        except Exception as error:
+            logging.warning(f"Failed to process coupon object with index {totalindex=} | {childindex=}")
+            raise error
 
         logging.info(f'Coupons in app total: {len(appCoupons)}')
         logging.info(f'Coupons in app not yet active: {len(appCouponsNotYetActive)}')
@@ -732,7 +740,7 @@ class BKCrawler:
                     startDateFormatted = datetimeCouponAvailable.strftime('%d.%m.%Y')
                 else:
                     startDateFormatted = "?"
-                couponDescr = futureCoupon.generateCouponShortText(highlightIfNew=False, includeVeggieSymbol=True)
+                couponDescr = futureCoupon.generateCouponShortText(highlightIfNew=False, includeVeggieSymbol=True, plumode=CouponTextRepresentationPLUMode.ALL_PLUS)
                 thisCouponText = f"<b>{startDateFormatted}</b> | " + couponDescr
                 self.cachedFutureCouponsText += "\n" + thisCouponText
 

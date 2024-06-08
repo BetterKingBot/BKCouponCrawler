@@ -13,10 +13,6 @@ from UtilsCouponsDB import User, ChannelCoupon, InfoEntry, CouponFilter, sortCou
     MAX_SECONDS_WITHOUT_USAGE_UNTIL_SEND_WARNING_TO_USER, MIN_SECONDS_BETWEEN_UPCOMING_AUTO_DELETION_WARNING, MAX_TIMES_INFORM_ABOUT_UPCOMING_AUTO_ACCOUNT_DELETION, \
     MAX_SECONDS_WITHOUT_USAGE_UNTIL_AUTO_ACCOUNT_DELETION
 
-""" For testing purposes only!! """
-# TODO: Remove this, add parameter handling so that no code changes are needed for this debug switch.
-DEBUGNOTIFICATOR = False
-
 
 async def collectNewCouponsNotifications(bkbot) -> None:
     """
@@ -294,7 +290,7 @@ async def updatePublicChannel(bkbot, updateMode: ChannelUpdateMode):
 
         index = -1
         for coupon in couponsToSendOut.values():
-            if DEBUGNOTIFICATOR:
+            if bkbot.debugmode:
                 break
             index += 1
             logging.info("Working on coupon " + str(index + 1) + "/" + str(len(couponsToSendOut)) + " | " + coupon.id)
@@ -346,7 +342,7 @@ async def updatePublicChannel(bkbot, updateMode: ChannelUpdateMode):
         infoText += bkbot.getNewCouponsTextWithChannelHyperlinks(newCoupons, 10)
     infoText += '\n' + SYMBOLS.WRENCH + ' Alle ' + str(len(activeCoupons)) + ' Coupons erneut in die Gruppe gesendet'
     infoText += '\n<b>------</b>'
-    if DEBUGNOTIFICATOR:
+    if bkbot.debugmode:
         infoText += '\n<b>' + SYMBOLS.WARNING + 'Debug Modus!!!' + SYMBOLS.WARNING + '</b>'
         infoText += "\n---"
     if bkbot.maintenanceMode:

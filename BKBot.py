@@ -24,7 +24,7 @@ from Helper import *
 from Crawler import BKCrawler, UserStats
 
 from UtilsCouponsDB import Coupon, User, ChannelCoupon, InfoEntry, getCouponsSeparatedByType, CouponFilter, UserFavoritesInfo, \
-    USER_SETTINGS_ON_OFF, CouponViews, sortCouponsAsList, MAX_HOURS_ACTIVITY_TRACKING, getCouponViewByIndex
+    USER_SETTINGS_ON_OFF, CouponViews, sortCouponsAsList, MAX_HOURS_ACTIVITY_TRACKING, getCouponViewByIndex, CouponTextRepresentationPLUMode
 from CouponCategory import CouponCategory
 from Helper import BotAllowedCouponTypes, CouponType, TEXT_NOTIFICATION_DISABLE
 from UtilsOffers import offerGetImagePath
@@ -91,6 +91,8 @@ class BKBot:
     my_parser.add_argument('-c', '--crawl', help='Crawler beim Start des Bots einmalig ausführen.', type=bool, default=False)
     my_parser.add_argument('-mm', '--maintenancemode', help='Wartungsmodus - zeigt im Bot und Channel eine entsprechende Meldung. Deaktiviert alle Bot Funktionen.', type=bool,
                            default=False)
+    my_parser.add_argument('-d', '--debugmode', help='Debugmodus', type=bool,
+                           default=False)
     args = my_parser.parse_args()
 
     def __init__(self):
@@ -116,6 +118,7 @@ class BKBot:
         self.application.add_error_handler(self.botErrorCallback)
         self.statsCached: Union[UserStats, None] = None
         self.statsCachedTimestamp: float = -1
+        self.debugmode: bool = self.args.debugmode
 
     def initHandlers(self):
         """ Adds all handlers to dispatcher (not error_handlers!!) """
@@ -556,11 +559,15 @@ class BKBot:
             currentPageContainsAtLeastOneFavoriteCoupon = False
             includeVeggieSymbol = user.settings.highlightVeggieCouponsInCouponButtonTexts
             if view.includeVeggieSymbol is not None:
-                # Override user setting
+                # Override user setting with value defined in coupon-view
                 includeVeggieSymbol = view.includeVeggieSymbol
             while len(buttons) < maxCouponsPerPage and index < len(coupons):
                 coupon = coupons[index]
-                buttonText = coupon.generateCouponShortText(highlightIfNew=user.settings.highlightNewCouponsInCouponButtonTexts, includeVeggieSymbol=includeVeggieSymbol)
+                if user.settings.enableTerminalMode:
+                    pluRepresentationMode: CouponTextRepresentationPLUMode = CouponTextRepresentationPLUMode.LONG_PLU
+                else:
+                    pluRepresentationMode: CouponTextRepresentationPLUMode = CouponTextRepresentationPLUMode.SHORT_PLU
+                buttonText = coupon.generateCouponShortText(highlightIfNew=user.settings.highlightNewCouponsInCouponButtonTexts, includeVeggieSymbol=includeVeggieSymbol, plumode=pluRepresentationMode)
                 if user.isFavoriteCoupon(coupon):
                     currentPageContainsAtLeastOneFavoriteCoupon = True
                     if view.highlightFavorites:
@@ -1720,8 +1727,8 @@ class BKBot:
                     await self.sendMessageWithUserBlockedHandling(user=user, userDB=userDB, text=notificationText, parse_mode='HTML', disable_web_page_preview=True,
                                                                   allowUpdateDB=False)
             except Exception as e:
-                # TODO: Find a better way than try catch all
                 logging.exception(e)
+                logging.info(f"Failed to find notification to user {user.id} -> Clearing it anyways")
                 pass
             user.pendingNotifications = []
             dbDocumentUpdates.append(user)
