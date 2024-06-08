@@ -1,13 +1,12 @@
-from json import loads
-
 import httpx
 
-from Crawler import HEADERS_OLD
 
 from BaseUtils import logging
 
 """ Helper tools to find storeIDs of stores via which we can obtain a list of coupons via API. """
 """ Returns List of stores """
+HEADERS_OLD = {"User-Agent": "BurgerKing/6.7.0 (de.burgerking.kingfinder; build:432; Android 8.0.0) okhttp/3.12.3"}
+
 stores = httpx.get('https://api.burgerking.de/api/o2uvrPdUY57J5WwYs6NtzZ2Knk7TnAUY/v2/de/de/stores/', headers=HEADERS_OLD).json()
 
 storeIDsToCheck = []

@@ -1,7 +1,7 @@
 import logging
 import os
-import re
 from datetime import datetime
+from enum import Enum
 from io import BytesIO
 from typing import Union, List, Optional
 
@@ -32,6 +32,12 @@ class CouponFilter(BaseModel):
     isPlantBased: Optional[Union[bool, None]] = None
     isEatable: Optional[Union[bool, None]] = None
     sortCode: Optional[Union[None, int]]
+
+class CouponTextRepresentationPLUMode(Enum):
+    """ This can be used to define how PLUs in short texts shall be represented. """
+    SHORT_PLU = 1
+    LONG_PLU = 2
+    ALL_PLUS = 3
 
 
 class CouponSortMode:
@@ -510,12 +516,21 @@ class Coupon(Document):
         else:
             return None
 
-    def generateCouponShortText(self, highlightIfNew: bool, includeVeggieSymbol: bool) -> str:
+    def generateCouponShortText(self, highlightIfNew: bool, includeVeggieSymbol: bool, plumode: CouponTextRepresentationPLUMode) -> str:
         """ Returns e.g. "Y15 | 2Whopper+M🍟+0,4Cola | 8,99€" """
+        if plumode == CouponTextRepresentationPLUMode.ALL_PLUS and self.plu is not None:
+            # All PLUs
+            vouchercode = f"{self.plu} | {self.id}"
+        elif plumode == CouponTextRepresentationPLUMode.SHORT_PLU and self.plu is not None:
+            # Short-PLU
+            vouchercode = self.plu
+        else:
+            # Long-PLU
+            vouchercode = self.id
         couponText = ''
         if highlightIfNew and self.isNewCoupon():
             couponText += SYMBOLS.NEW
-        couponText += self.getPLUOrUniqueIDOrRedemptionHint() + " | " + self.getTitleShortened(includeVeggieSymbol=includeVeggieSymbol)
+        couponText += vouchercode + " | " + self.getTitleShortened(includeVeggieSymbol=includeVeggieSymbol)
         couponText = self.appendPriceInfoText(couponText)
         return couponText
 
@@ -660,6 +675,7 @@ class User(Document):
             displayCouponCategoryVeggie=BooleanField(default=True),
             displayCouponCategoryPayback=BooleanField(default=True),
             displayCouponSortButton=BooleanField(default=True),
+            enableTerminalMode=BooleanField(default=False),
             displayOffersButton=BooleanField(default=True),
             displayBKWebsiteURLs=BooleanField(default=True),
             displayFeedbackCodeGenerator=BooleanField(default=True),
@@ -781,6 +797,7 @@ class User(Document):
             return False
 
     def getPaybackCardNumber(self) -> Union[str, None]:
+        """ Returns Payback card number of users' [first] Payback card. """
         """ Can this be considered a workaround or is the mapping made in a stupid way that it does not return "None" for keys without defined defaults??!
           doing User.paybackCard.paybackCardNumber directly would raise an AttributeError!
           Alternative would be to set empty String as default value. """
@@ -803,6 +820,7 @@ class User(Document):
         self.paybackCard.addedDate = datetime.now()
 
     def deletePaybackCard(self):
+        """ Deletes users' [first] Payback card. """
         dummyUser = User()
         self.paybackCard = dummyUser.paybackCard
 
@@ -1203,6 +1221,11 @@ USER_SETTINGS_ON_OFF = {
         "category": SettingCategories.COUPON_DISPLAY,
         "description": "Coupon sortieren Button zeigen",
         "default": True
+    },
+    "enableTerminalMode": {
+        "category": SettingCategories.COUPON_DISPLAY,
+        "description": "Terminal Modus | LangPLU in Buttons zeigen",
+        "default": False
     },
     "notifyWhenFavoritesAreBack": {
         "category": SettingCategories.NOTIFICATIONS,

@@ -90,12 +90,12 @@ def shortenProductNames(couponTitle: str) -> str:
     couponTitle = sanitizeCouponTitle(couponTitle)
     pommesReplacement = SYMBOLS.FRIES
     colaReplacement = "🥤"
-    couponTitle = re.sub(r"kleine(\s*KING)?\s*Pommes", r"S" + pommesReplacement, couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"mittlere(\s*KING)?\s*Pommes", r"M" + pommesReplacement, couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"große(\s*KING)?\s*Pommes", r"L" + pommesReplacement, couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"kleine(\s*KING)?\s*Pommes", "S" + pommesReplacement, couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"mittlere(\s*KING)?\s*Pommes", "M" + pommesReplacement, couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"große(\s*KING)?\s*Pommes", "L" + pommesReplacement, couponTitle, flags=re.IGNORECASE)
     """ Just in case we missed one fries-case... """
     couponTitle = re.sub(r"KING\s*(Pommes)", pommesReplacement, couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Coca[\s-]*Cola", colaReplacement, couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"(Coca[\s-]*)?Cola", colaReplacement, couponTitle, flags=re.IGNORECASE)
     """ E.g. "Big KING" --> "Big K" """
     couponTitle = re.sub(r"(Big|Bacon|Fish|Halloumi)\s*KING", r"\1", couponTitle, flags=re.IGNORECASE)
     """ E.g. "KING Shake" --> "Shake" """
@@ -113,29 +113,29 @@ def shortenProductNames(couponTitle: str) -> str:
     couponTitle = re.sub(r"(b)urger", r"\1rgr", couponTitle, flags=re.IGNORECASE)
 
     # Assume that all users know that "Cheddar" is cheese so let's remove this double entry
-    couponTitle = re.sub(r"Cheddar\s*Cheese", r"Cheddar", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Chicken", r"Ckn", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Chili[\s-]*Cheese", r"CC", couponTitle, flags=re.IGNORECASE)
-    # couponTitle = re.sub(r"Coca[\s-]*Cola", r"Cola", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Deluxe", r"Dlx", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Dips", r"Dip", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Double", r"Dbl", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Long", r"Lng", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Nuggets?", r"Nug", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Plant[\s-]*Based", r"Plnt", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Tripp?le", r"Trple", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Veggie", r"Veg", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Whopper", r"Wppr", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Steakhouse", r"SteakH", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"X[\s-]*tra", r"Xtra", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Onion[\s-]*Rings", r"Rings", couponTitle, flags=re.IGNORECASE)
-    # Remove 'oder'
+    couponTitle = re.sub(r"Cheddar\s*Cheese", "Cheddar", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Chicken", "Ckn", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Chili[\s-]*Cheese", "CC", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Deluxe", "Dlx", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Dips", "Dip", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Double", "Dbl", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Long", "Lng", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Nuggets?", "Nug", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Plant[\s-]*Based", "Plnt", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Tripp?le", "Trple", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Veggie", "Veg", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Whopper", "Wppr", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Steakhouse", "SteakH", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"X[\s-]*tra", "Xtra", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Onion[\s-]*Rings", "Rings", couponTitle, flags=re.IGNORECASE)
+    """ Down below comes other bullshit they sometimes place into the subtitle fields. """
     couponTitle = re.sub(r"\s*oder\s*", r"", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"\s*zum\s*Preis\s*von\s*(1!?|einem|einer)", r"", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"\s*zum\s*Preis\s*von\s*(1!?|einem|einer)", "", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"^.{0,3}?Den Code zur Einlösung findest du im QR-Code.*", "", couponTitle, flags=re.IGNORECASE)
     # Remove e.g. "Im KING Menü (+ 50 Cent)"
-    couponTitle = re.sub(r"Im King Menü \(\+[^)]+\)", r"", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r" mit ", r"&", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Jr\s*\.", r"Jr", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Im King Menü \(\+[^)]+\)", "", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r" mit ", "&", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Jr\s*\.", "Jr", couponTitle, flags=re.IGNORECASE)
     # Do some more basic replacements
     couponTitle = couponTitle.replace(' ', '')
     # E.g. "...Chili-Cheese"
@@ -290,6 +290,9 @@ def couponTitleContainsVeggieFood(title: str) -> bool:
     elif '+' not in titleLower and 'shake' in titleLower:
         return True
     elif '+' not in titleLower and 'brownie' in titleLower:
+        return True
+    elif '+' not in titleLower and 'potatoe' in titleLower:
+        # Country Potatoes
         return True
     else:
         # Non veggie menus and all the stuff that this handling doesn't detect properly yet
