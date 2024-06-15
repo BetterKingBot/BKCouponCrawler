@@ -19,7 +19,7 @@ from UtilsOffers import offerGetImagePath, offerIsValid
 from UtilsCouponsDB import Coupon, InfoEntry, CouponFilter, getCouponTitleMapping, User, removeDuplicatedCoupons, sortCoupons, CouponTextRepresentationPLUMode
 from CouponCategory import CouponCategory
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
            "Origin": "https://www.burgerking.de",
            "Content-Type": "application/json",
            "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"99\", \"Google Chrome\";v=\"99\"",
@@ -31,9 +31,6 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
            "x-ui-language": "de",
            "x-ui-platform": "web",
            "x-ui-region": "DE"}
-# x-user-datetime: 2022-03-16T20:59:45+01:00
-""" Enable this to crawl from localhost instead of API. Useful if there is a lot of testing to do! """
-DEBUGCRAWLER = False
 
 
 class UserStats:
@@ -66,7 +63,6 @@ class UserStats:
                 self.numberofUsersWhoEnabledBotNewsletter += 1
             if user.settings.displayDonateButton is False:
                 self.numberofUsersWhoDisabledDonateButton += 1
-
 
 
 class BKCrawler:

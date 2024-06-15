@@ -330,10 +330,6 @@ class Coupon(Document):
         if self.isPlantBased():
             return False
         elif self.tags is not None:
-            # Now check for meat in tags
-            # More tags:
-            # KingSnacks -> Can be meat
-            # NoPreference -> Can be anything, most items got this tag only
             for tag in self.tags:
                 tag = tag.lower()
                 if 'beef' in tag or 'chicken' in tag:
@@ -341,12 +337,6 @@ class Coupon(Document):
 
         titleLower = self.getTitle().lower()
         if 'chicken' in titleLower:
-            return True
-        else:
-            return False
-
-    def isSweet(self) -> bool:
-        if self.tags is not None and len(self.tags) == 1 and self.tags[0].lower() == 'sweetkings':
             return True
         else:
             return False
@@ -1058,10 +1048,9 @@ def getCouponsTotalPrice(coupons: List[Coupon]) -> float:
 def getCouponsSeparatedByType(coupons: dict) -> dict:
     """ Returns dict containing lists of coupons by type """
     couponsSeparatedByType = {}
-    for couponType in BotAllowedCouponTypes:
-        couponsTmp = list(filter(lambda x: x[Coupon.type.name] == couponType, list(coupons.values())))
-        if couponsTmp is not None and len(couponsTmp) > 0:
-            couponsSeparatedByType[couponType] = couponsTmp
+    for coupon in list(coupons.values()):
+        typelist = couponsSeparatedByType.setdefault(coupon.type, [])
+        typelist.append(coupon)
     return couponsSeparatedByType
 
 
