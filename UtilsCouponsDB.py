@@ -189,7 +189,7 @@ class Coupon(Document):
     isHidden = BooleanField(default=False)  # Typically only available for upsell App coupons
     description = TextField()
     # TODO: Make use of this once it is possible for users to add coupons to DB via API
-    # addedVia = IntegerField()
+    addedVia = IntegerField()
     tags = ListField(TextField())
     webviewID = TextField()
     webviewURL = TextField()
