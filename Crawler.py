@@ -19,7 +19,7 @@ from UtilsOffers import offerGetImagePath, offerIsValid
 from UtilsCouponsDB import Coupon, InfoEntry, CouponFilter, getCouponTitleMapping, User, removeDuplicatedCoupons, sortCoupons, CouponTextRepresentationPLUMode
 from CouponCategory import CouponCategory
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
            "Origin": "https://www.burgerking.de",
            "Content-Type": "application/json",
            "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"99\", \"Google Chrome\";v=\"99\"",
@@ -31,9 +31,6 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
            "x-ui-language": "de",
            "x-ui-platform": "web",
            "x-ui-region": "DE"}
-# x-user-datetime: 2022-03-16T20:59:45+01:00
-""" Enable this to crawl from localhost instead of API. Useful if there is a lot of testing to do! """
-DEBUGCRAWLER = False
 
 
 class UserStats:
@@ -66,7 +63,6 @@ class UserStats:
                 self.numberofUsersWhoEnabledBotNewsletter += 1
             if user.settings.displayDonateButton is False:
                 self.numberofUsersWhoDisabledDonateButton += 1
-
 
 
 class BKCrawler:
@@ -737,7 +733,7 @@ class BKCrawler:
             for futureCoupon in self.cachedFutureCoupons:
                 datetimeCouponAvailable = futureCoupon.getStartDatetime()
                 if datetimeCouponAvailable is not None:
-                    startDateFormatted = datetimeCouponAvailable.strftime('%d.%m.%Y')
+                    startDateFormatted = datetimeCouponAvailable.strftime('%d.%m.')
                 else:
                     startDateFormatted = "?"
                 couponDescr = futureCoupon.generateCouponShortText(highlightIfNew=False, includeVeggieSymbol=True, plumode=CouponTextRepresentationPLUMode.ALL_PLUS)
@@ -904,19 +900,10 @@ class BKCrawler:
          Returns all by default."""
         timestampStart = datetime.now().timestamp()
         couponDB = self.getCouponDB()
-        # if True:
-        #     allCoupons = {}
-        #     for couponID in couponDB:
-        #         allCoupons[couponID] = couponDB[couponID]
-        #     return allCoupons
         desiredCoupons = {}
-        # if True:
-        #     for uniqueCouponID in couponDB:
-        #         desiredCoupons[uniqueCouponID] = couponDB[uniqueCouponID]
-        #     return desiredCoupons
         # Log if developer is trying to use incorrect filters
         if couponfilter.isVeggie is False and couponfilter.isPlantBased is True:
-            logging.warning(f'Bad params: {couponfilter.isVeggie=} and {couponfilter.isPlantBased=}')
+            logging.warning(f'Bad filter params: {couponfilter.isVeggie=} and {couponfilter.isPlantBased=}')
         for uniqueCouponID in couponDB:
             coupon = Coupon.load(couponDB, uniqueCouponID)
             if couponfilter.activeOnly and not coupon.isValid():
@@ -1011,18 +998,17 @@ def downloadImageIfNonExistant(url: str, path: str) -> bool:
         if os.path.exists(path):
             # Image already exists
             return False
+        logging.info('Downloading image to: ' + path)
+        r = requests.get(url, allow_redirects=True)
+        open(path, mode='wb').write(r.content)
+        # Check for broken image and delete it if broken
+        # TODO: Solve this in a more elegant way so we do not even write/store broken image files in the first place(?!)
+        if isValidImageFile(path):
+            return True
         else:
-            logging.info('Downloading image to: ' + path)
-            r = requests.get(url, allow_redirects=True)
-            open(path, mode='wb').write(r.content)
-            # Check for broken image and delete it if broken
-            # TODO: Solve this in a more elegant way so we do not even write/store broken image files in the first place(?!)
-            if isValidImageFile(path):
-                return True
-            else:
-                logging.warning("Image is broken: Deleting broken image: " + path)
-                os.remove(path)
-                return False
+            logging.warning("Image is broken: Deleting broken image: " + path)
+            os.remove(path)
+            return False
     except:
         traceback.print_exc()
         logging.warning("Image download failed: " + url)
@@ -1031,18 +1017,18 @@ def downloadImageIfNonExistant(url: str, path: str) -> bool:
 
 def generateQRImageIfNonExistant(qrCodeData: str, path: str) -> bool:
     if os.path.exists(path):
+        # Image already exists
         return False
-    else:
-        qr = qrcode.QRCode(
-            version=1,
-            # 2021-05-02: This makes the image itself bigger but due to the border and the resize of Telegram, these QR codes might be suited better for usage in Telegram
-            border=10
-        )
-        qr.add_data(qrCodeData)
-        """ 2021-01-25: Use the same color they're using in their app. """
-        img = qr.make_image(fill_color="#4A1E0D", back_color="white")
-        img.save(path)
-        return True
+    qr = qrcode.QRCode(
+        version=1,
+        # 2021-05-02: This makes the image itself bigger but due to the border and the resize of Telegram, these QR codes might be suited better for usage in Telegram
+        border=10
+    )
+    qr.add_data(qrCodeData)
+    """ 2021-01-25: Use the same color they're using in their app. """
+    img = qr.make_image(fill_color="#4A1E0D", back_color="white")
+    img.save(path)
+    return True
 
 
 def getCouponMappingForCrawler() -> dict:

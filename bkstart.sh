@@ -3,11 +3,11 @@
 # Dieses Script ist zur Verwendung in Crontab gedacht -> Crontab Eintrag:
 # */1 * * * * sh /root/betterking/BKCouponCrawler/bkstart.sh
 
-start_betterking() {
-  cd ~/betterking/BKCouponCrawler && python3 BKBot.py > /tmp/bkbot.log 2>&1 & echo $! >/tmp/betterkingbot.pid
-}
+filepath=~/betterking/BKCouponCrawler/process.pid
 
-filepath=/tmp/betterkingbot.pid
+start_betterking() {
+  cd ~/betterking/BKCouponCrawler && python3 BKBot.py > /tmp/bkbot.log 2>&1 & echo $! >$filepath
+}
 
 # Start if pid file does not exist
 [ ! -f $filepath ] && start_betterking && echo Betterking gestartet weil PID File nicht existiert
