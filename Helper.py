@@ -111,9 +111,9 @@ def shortenProductNames(couponTitle: str) -> str:
     # "Chicken Nuggets" -> "Nuggets"
     couponTitle = re.sub(r"Chicken\s*(Nuggets)", r"\1", couponTitle, flags=re.IGNORECASE)
     # 2024-06-15: Fix "fan bundle"
-    # couponTitle = re.sub(r"Kleines?", "S", couponTitle, flags=re.IGNORECASE)
-    # couponTitle = re.sub(r"Großes?", "L", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"(Kleines?|Großes?)\s*(Plant[\w-]*)?\s*Fan\s*Bundle\s*", "", couponTitle, flags=re.IGNORECASE)
+    # 2024-06-29
+    couponTitle = re.sub(r"Wähle\s* zwischen\s*", "", couponTitle, flags=re.IGNORECASE)
 
     # Cheeseburger -> Cheesebrgr
     couponTitle = re.sub(r"(b)urger", r"\1rgr", couponTitle, flags=re.IGNORECASE)
@@ -143,10 +143,12 @@ def shortenProductNames(couponTitle: str) -> str:
     couponTitle = re.sub(r" mit ", "&", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Jr\s*\.", "Jr", couponTitle, flags=re.IGNORECASE)
     # Do some more basic replacements
+    couponTitle = re.sub(r"\s+und\s+", ",", couponTitle, flags=re.IGNORECASE)
     couponTitle = couponTitle.replace(' ', '')
     # E.g. "...Chili-Cheese"
     couponTitle = couponTitle.replace('-', '')
-    # couponTitle = couponTitle.replace(' + ', '+')
+    # Replace point at the end as they sometimes use whole sentences in coupon titles
+    couponTitle = re.sub(r"\.$", "", couponTitle, flags=re.IGNORECASE)
     return couponTitle
 
 
@@ -232,7 +234,6 @@ class SYMBOLS:
     HEART = '❤'
     BEER = '🍺'
     BEERS = '🍻'
-    CORONA = '😷'
     FRIES = '🍟'
     INFORMATION = 'ℹ'
     WRENCH = '🔧'
@@ -275,30 +276,34 @@ def couponTitleContainsFriesAndDrink(title: str) -> bool:
 
 def couponTitleContainsVeggieFood(title: str) -> bool:
     # Convert title to lowercase for more thoughtless string comparison
-    if couponTitleContainsPlantBasedFood(title):
+    titleLower = title.lower()
+    if couponTitleContainsPlantBasedFood(titleLower):
         # All plant based articles are veggie
         return True
-    titleLower = title.lower()
     if 'veggie' in titleLower:
         return True
     elif 'fusion' in titleLower:
         # Ice cream
         return True
-    elif couponTitleIsFries(titleLower):
+    elif '+' in titleLower:
+        return False
+    elif couponTitleContainsFries(titleLower):
         return True
-    elif '+' not in titleLower and 'cheese nacho' in titleLower:
+    elif 'cheese nacho' in titleLower:
         # Cheese Nachos
         return True
-    elif '+' not in titleLower and 'chili cheese nuggets' in titleLower:
+    elif 'chili cheese nuggets' in titleLower:
         return True
-    elif '+' not in titleLower and 'onion rings' in titleLower:
+    elif 'onion rings' in titleLower:
         return True
-    elif '+' not in titleLower and 'shake' in titleLower:
+    elif 'shake' in titleLower:
         return True
-    elif '+' not in titleLower and 'brownie' in titleLower:
+    elif 'brownie' in titleLower:
         return True
-    elif '+' not in titleLower and 'potatoe' in titleLower:
+    elif 'potatoe' in titleLower:
         # Country Potatoes
+        return True
+    elif 'churros' in titleLower:
         return True
     else:
         # Non veggie menus and all the stuff that this handling doesn't detect properly yet
@@ -328,14 +333,6 @@ def couponTitleContainsFries(title: str) -> bool:
         return False
 
 
-def couponTitleIsFries(title: str) -> bool:
-    titleLower = title.lower()
-    if '+' not in titleLower and couponTitleContainsFries(titleLower):
-        return True
-    else:
-        return False
-
-
 def couponTitleContainsDrink(title: str) -> bool:
     titleLower = title.lower()
     if 'cola' in titleLower or re.compile(r'red\s*bull').search(titleLower):
@@ -355,6 +352,13 @@ def isCouponShortPLUWithAtLeastOneLetter(plu: str) -> bool:
 
 
 def generateFeedbackCode() -> str:
+    currentMonthChars = getFeedbackCodeCurrentMonthChars()
+    randomNumberList = random.sample(range(0, 9), 6)
+    stringList = [str(integer) for integer in randomNumberList]
+    return currentMonthChars + ''.join(stringList)
+
+
+def getFeedbackCodeCurrentMonthChars() -> str:
     """ Credits for that go to: https://edik.ch/posts/hack-the-burger-king.html """
     currentMonth = datetime.now().month
     if currentMonth == 1:
@@ -381,9 +385,7 @@ def generateFeedbackCode() -> str:
         res = 'CB'
     else:
         res = 'VM'
-    randomNumberList = random.sample(range(0, 9), 6)
-    string_ints = [str(integer) for integer in randomNumberList]
-    return res + ''.join(string_ints)
+    return res
 
 
 def getFormattedPassedTime(pastTimestamp: float) -> str:
@@ -421,6 +423,7 @@ class CouponType:
     ONLINE_ONLY_STORE_SPECIFIC = 6  # Placeholder - not used
     SPECIAL = 7
     PAYBACK = 8
+
 
 # TODO: Remove this
 BotAllowedCouponTypes = [CouponType.APP, CouponType.PAPER, CouponType.SPECIAL, CouponType.PAYBACK]

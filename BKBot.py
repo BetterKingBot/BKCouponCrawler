@@ -351,7 +351,7 @@ class BKBot:
             allButtons.append(
                 [InlineKeyboardButton('Spar Kings', url=URLs.BK_SPAR_KINGS), InlineKeyboardButton('KING Finder', url=URLs.PROTOCOL_BK + URLs.BK_KING_FINDER)])
         if user.settings.displayFeedbackCodeGenerator:
-            allButtons.append([InlineKeyboardButton('Feedback Code Generator', callback_data=CallbackVars.MENU_FEEDBACK_CODES)])
+            allButtons.append([InlineKeyboardButton(f'Feedback Code Generator [{getFeedbackCodeCurrentMonthChars()}]', callback_data=CallbackVars.MENU_FEEDBACK_CODES)])
         if self.publicChannelName is not None and user.settings.displayFAQLinkButton:
             allButtons.append([InlineKeyboardButton('FAQ', url=self.getPublicChannelFAQLink())])
         if user.settings.displayDonateButton:
