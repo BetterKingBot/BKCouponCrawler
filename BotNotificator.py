@@ -173,10 +173,10 @@ async def notifyAdminsAboutProblems(bkbot) -> None:
     timedeltaLastSuccessfulRun = datetime.now() - infoDBDoc.dateLastSuccessfulCrawlRun if infoDBDoc.dateLastSuccessfulCrawlRun is not None else None
     timedeltaLastSuccessfulChannelupdate = datetime.now() - infoDBDoc.dateLastSuccessfulChannelUpdate if infoDBDoc.dateLastSuccessfulChannelUpdate is not None else None
     text = ''
-    if timedeltaLastSuccessfulRun is not None and timedeltaLastSuccessfulRun.seconds > 48 * 60 * 60:
-        text += f'{SYMBOLS.WARNING} Letzter erfolgreicher Crawlvorgang war am {formatDateGermanHuman(infoDBDoc.dateLastSuccessfulCrawlRun)}'
-    if timedeltaLastSuccessfulChannelupdate is not None and timedeltaLastSuccessfulChannelupdate.seconds > 48 * 60 * 60:
-        text += f'\n{SYMBOLS.WARNING} Letztes erfolgreiches Channelupdate war am {formatDateGermanHuman(infoDBDoc.dateLastSuccessfulChannelUpdate)}'
+    if timedeltaLastSuccessfulRun is not None and timedeltaLastSuccessfulRun.hour > 48:
+        text += f'{SYMBOLS.WARNING} Crawler Fehler: Letzter erfolgreicher Crawlvorgang war am {formatDateGermanHuman(infoDBDoc.dateLastSuccessfulCrawlRun)}'
+    if timedeltaLastSuccessfulChannelupdate is not None and timedeltaLastSuccessfulChannelupdate.hour > 48:
+        text += f'\n{SYMBOLS.WARNING} Channelupdate Fehler: Letztes erfolgreiches Channelupdate war am {formatDateGermanHuman(infoDBDoc.dateLastSuccessfulChannelUpdate)}'
     if len(text) == 0:
         # No notifications to send out
         return
