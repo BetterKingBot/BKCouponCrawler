@@ -132,7 +132,8 @@ def shortenProductNames(couponTitle: str) -> str:
     couponTitle = re.sub(r"Whopper", "Wppr", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Steakhouse", "SteakH", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"X[\s-]*tra", "Xtra", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"Onion[\s-]*Rings", "Rings", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"(Onion|KING)[\s-]*Rings", "Rings", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"KING[\s-]*Rings", "Rings", couponTitle, flags=re.IGNORECASE)
 
     """ Down below comes other bullshit they sometimes place into the subtitle fields. """
     couponTitle = re.sub(r"\s*oder\s*", r"", couponTitle, flags=re.IGNORECASE)
