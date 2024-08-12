@@ -283,6 +283,8 @@ class BKCrawler:
                     try:
                         uniqueCouponID = vendorConfigs['rpos']['constantPlu']
                     except:
+                        uniqueCouponID = None
+                    if uniqueCouponID is None:
                         uniqueCouponID = vendorConfigs['partner']['constantPlu']
                     legacyInternalName = couponBK.get('internalName')
                     # Find coupon-title. Prefer to get it from 'internalName' as the other title may contain crap we don't want.
@@ -297,8 +299,6 @@ class BKCrawler:
                     except:
                         # Subtitle is not always available
                         pass
-                    if subtitle is not None and 'QR' in subtitle:
-                        print("WTF")
                     if legacyInternalNameRegex is not None and useInternalNameAsTitle:
                         titleFull = legacyInternalNameRegex.group(1)
                         titleFull = titleFull.replace('_', ' ')
