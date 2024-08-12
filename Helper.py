@@ -100,7 +100,7 @@ def shortenProductNames(couponTitle: str) -> str:
     """ E.g. "Big KING" --> "Big K" """
     couponTitle = re.sub(r"(Big|Bacon|Fish|Halloumi)\s*KING", r"\1", couponTitle, flags=re.IGNORECASE)
     """ E.g. "KING Shake" --> "Shake" """
-    couponTitle = re.sub(r"KING\s*(Jr\.?\s*Meal|Jr\.?\s*Menü|Shake|Nuggets?|Wings?)", r"\1", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"KING\s*(Jr\.?\s*Meal|Jr\.?\s*Menü|Shake|Nuggets?|Wings?|Onion[\s-]*Rings?)", r"\1", couponTitle, flags=re.IGNORECASE)
     """ 'Meta' replaces """
     # Normalize- and fix drink unit e.g. "0,3 L" or "0.3l" to "0.3" (remove unit character to save even more space)
     couponTitle = re.sub(r"(0[.,]\d{1,2})\s*L", r"\1", couponTitle, flags=re.IGNORECASE)
@@ -132,8 +132,7 @@ def shortenProductNames(couponTitle: str) -> str:
     couponTitle = re.sub(r"Whopper", "Wppr", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Steakhouse", "SteakH", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"X[\s-]*tra", "Xtra", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"(Onion|KING)[\s-]*Rings", "Rings", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"KING[\s-]*Rings", "Rings", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Onion[\s-]*Rings", "Rings", couponTitle, flags=re.IGNORECASE)
 
     """ Down below comes other bullshit they sometimes place into the subtitle fields. """
     couponTitle = re.sub(r"\s*oder\s*", r"", couponTitle, flags=re.IGNORECASE)
