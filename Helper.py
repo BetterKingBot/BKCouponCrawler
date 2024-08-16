@@ -335,7 +335,11 @@ def couponTitleContainsFries(title: str) -> bool:
 
 def couponTitleContainsDrink(title: str) -> bool:
     titleLower = title.lower()
-    if 'cola' in titleLower or re.compile(r'red\s*bull').search(titleLower):
+    if 'cola' in titleLower:
+        return True
+    elif re.compile(r'red\s*bull').search(titleLower):
+        return True
+    elif re.compile(r'monster\s*energy').search(titleLower):
         return True
     else:
         return False
