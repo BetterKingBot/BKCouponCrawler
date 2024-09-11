@@ -1,0 +1,338 @@
+[
+  {
+    "title": "X-tra Long Chili Cheese + Big King XXL",
+    "uniqueID": "33513",
+    "plu": "957",
+    "expireDate": "8.11.2024",
+    "price": 14.99
+  },
+  {
+    "title": "Long Chicken + Big King XXL",
+    "uniqueID": "33514",
+    "plu": "958",
+    "expireDate": "8.11.2024",
+    "price": 13.99
+  },
+  {
+    "title": "6 King Nuggets + Bacon King",
+    "uniqueID": "34504",
+    "plu": "954",
+    "expireDate": "8.11.2024",
+    "price": 13.99
+  },
+  {
+    "title": "6 Onion Rings + Bacon King",
+    "uniqueID": "34505",
+    "plu": "956",
+    "expireDate": "8.11.2024",
+    "price": 12.99
+  },
+  {
+    "title": "X-tra Long Chili Cheese + Long Chicken",
+    "uniqueID": "32999",
+    "plu": "951",
+    "expireDate": "8.11.2024",
+    "price": 11.99
+  },
+  {
+    "title": "2 Crispy Chicken",
+    "uniqueID": "33001",
+    "plu": "929",
+    "expireDate": "8.11.2024",
+    "price": 9.99
+  },
+  {
+    "title": "2 Big King",
+    "uniqueID": "33017",
+    "plu": "940",
+    "expireDate": "8.11.2024",
+    "price": 9.99
+  },
+  {
+    "title": "2 Long Chicken",
+    "uniqueID": "33003",
+    "plu": "950",
+    "expireDate": "8.11.2024",
+    "price": 9.99
+  },
+  {
+    "title": "6 Plant-based Nuggets + King Jr. Meal",
+    "uniqueID": "33244",
+    "plu": "965",
+    "expireDate": "8.11.2024",
+    "price": 7.89
+  },
+  {
+    "title": "6 King Nuggets + King Jr. Meal",
+    "uniqueID": "33245",
+    "plu": "964",
+    "expireDate": "8.11.2024",
+    "price": 7.99
+  },
+  {
+    "title": "King Churros",
+    "uniqueID": "44418",
+    "plu": "986",
+    "expireDate": "8.11.2024",
+    "price": 4.49
+  },
+  {
+    "title": "King Churros + King Sundae",
+    "uniqueID": "44419",
+    "plu": "987",
+    "expireDate": "8.11.2024",
+    "price": 4.49
+  },
+  {
+    "title": "King Sundae",
+    "uniqueID": "44416",
+    "plu": "985",
+    "expireDate": "8.11.2024",
+    "price": 1.49
+  },
+  {
+    "title": "King Fusion Oreo",
+    "uniqueID": "44415",
+    "plu": "980",
+    "expireDate": "8.11.2024",
+    "price": 2.49
+  },
+  {
+    "title": "0,25 l King Shake",
+    "uniqueID": "51631",
+    "plu": "982",
+    "expireDate": "8.11.2024",
+    "price": 1.99
+  },
+  {
+    "title": "0,4 l King Shake",
+    "uniqueID": "51597",
+    "plu": "984",
+    "expireDate": "8.11.2024",
+    "price": 2.99
+  },
+  {
+    "title": "6 Plant-based Nuggets",
+    "uniqueID": "23341",
+    "plu": "948",
+    "expireDate": "8.11.2024",
+    "price": 2.89
+  },
+  {
+    "title": "6 Onion Rings + Plant-based Long Chicken",
+    "uniqueID": "34522",
+    "plu": "942",
+    "expireDate": "8.11.2024",
+    "price": 7.39
+  },
+  {
+    "title": "6 Onion Rings + Plant-based Big King",
+    "uniqueID": "34521",
+    "plu": "941",
+    "expireDate": "8.11.2024",
+    "price": 7.39
+  },
+  {
+    "title": "Plant-based Whopper",
+    "uniqueID": "31899",
+    "plu": "949",
+    "expireDate": "8.11.2024",
+    "price": 7.39
+  },
+  {
+    "title": "6 Plant-based Nuggets + Plant-based Long Chicken",
+    "uniqueID": "34523",
+    "plu": "945",
+    "expireDate": "8.11.2024",
+    "price": 9.29
+  },
+  {
+    "title": "Plant-based Cheeseburger + Plant-based Chili Cheese Burger",
+    "uniqueID": "40683",
+    "plu": "947",
+    "expireDate": "8.11.2024",
+    "price": 4.79
+  },
+  {
+    "title": "6 Plant-based Nuggets + Plant-based X-tra Long Chili Cheese",
+    "uniqueID": "34524",
+    "plu": "946",
+    "expireDate": "8.11.2024",
+    "price": 10.29
+  },
+  {
+    "title": "6 Onion Rings",
+    "uniqueID": "23280",
+    "plu": "909",
+    "expireDate": "8.11.2024",
+    "price": 1.49
+  },
+  {
+    "title": "2 Whopper",
+    "uniqueID": "34527",
+    "plu": "952",
+    "expireDate": "8.11.2024",
+    "price": 11.99
+  },
+  {
+    "title": "2 Whopper Jr.",
+    "uniqueID": "32986",
+    "plu": "911",
+    "expireDate": "8.11.2024",
+    "price": 6.99
+  },
+  {
+    "title": "Whopper",
+    "uniqueID": "31898",
+    "plu": "915",
+    "expireDate": "8.11.2024",
+    "price": 7.49
+  },
+  {
+    "title": "Whopper Jr.",
+    "uniqueID": "16132",
+    "plu": "910",
+    "expireDate": "8.11.2024",
+    "price": 2.49
+  },
+  {
+    "title": "6 King Nuggets + Crispy Chicken",
+    "uniqueID": "34525",
+    "plu": "972",
+    "expireDate": "8.11.2024",
+    "price": 9.49
+  },
+  {
+    "title": "Crispy Chicken",
+    "uniqueID": "16094",
+    "plu": "918",
+    "expireDate": "8.11.2024",
+    "price": 3.79
+  },
+  {
+    "title": "6 King Nuggets + Big King",
+    "uniqueID": "34529",
+    "plu": "970",
+    "expireDate": "8.11.2024",
+    "price": 9.49
+  },
+  {
+    "title": "Big King",
+    "uniqueID": "16095",
+    "plu": "919",
+    "expireDate": "8.11.2024",
+    "price": 3.79
+  },
+  {
+    "title": "6 King Nuggets + Long Chicken",
+    "uniqueID": "34530",
+    "plu": "971",
+    "expireDate": "8.11.2024",
+    "price": 9.49
+  },
+  {
+    "title": "Long Chicken",
+    "uniqueID": "16096",
+    "plu": "920",
+    "expireDate": "8.11.2024",
+    "price": 3.79
+  },
+  {
+    "title": "2 Cheeseburger",
+    "uniqueID": "60681",
+    "plu": "912",
+    "expireDate": "8.11.2024",
+    "price": 4.99
+  },
+  {
+    "title": "2 Chili Cheese Burger",
+    "uniqueID": "60682",
+    "plu": "914",
+    "expireDate": "8.11.2024",
+    "price": 4.99
+  },
+  {
+    "title": "6 King Nuggets",
+    "uniqueID": "23378",
+    "plu": "901",
+    "expireDate": "8.11.2024",
+    "price": 2.99
+  },
+  {
+    "title": "Chili Cheese Burger + Crispy Chicken",
+    "uniqueID": "34528",
+    "plu": "959",
+    "expireDate": "8.11.2024",
+    "price": 7.99
+  },
+  {
+    "title": "6 King Nuggets + Double Cheeseburger",
+    "uniqueID": "34520",
+    "plu": "928",
+    "expireDate": "8.11.2024",
+    "price": 8.99
+  },
+  {
+    "title": "6 Chili Cheese Nuggets + Double Chili Cheese Burger",
+    "uniqueID": "34519",
+    "plu": "927",
+    "expireDate": "8.11.2024",
+    "price": 8.99
+  },
+  {
+    "title": "2 mittlere King Pommes zum Preis von einer Portion",
+    "uniqueID": "22064",
+    "plu": "900",
+    "expireDate": "8.11.2024",
+    "price": null
+  },
+  {
+    "title": "6 Flame Wings",
+    "uniqueID": "23379",
+    "plu": "916",
+    "expireDate": "8.11.2024",
+    "price": 4.99
+  },
+  {
+    "title": "Chili Cheese Fries",
+    "uniqueID": "22063",
+    "plu": "902",
+    "expireDate": "8.11.2024",
+    "price": 1.99
+  },
+  {
+    "title": "6 Chili Cheese Nuggets",
+    "uniqueID": "23273",
+    "plu": "904",
+    "expireDate": "8.11.2024",
+    "price": 2.99
+  },
+  {
+    "title": "Crispy Chicken",
+    "uniqueID": "31897",
+    "plu": "905",
+    "expireDate": "8.11.2024",
+    "price": 6.49
+  },
+  {
+    "title": "6 King Nuggets + Big King",
+    "uniqueID": "34517",
+    "plu": "906",
+    "expireDate": "8.11.2024",
+    "price": 7.49
+  },
+  {
+    "title": "6 Onion Rings + Long Chicken",
+    "uniqueID": "34518",
+    "plu": "907",
+    "expireDate": "8.11.2024",
+    "price": 7.49
+  },
+  {
+    "title": "20 King Nuggets",
+    "uniqueID": "23277",
+    "plu": "917",
+    "expireDate": "8.11.2024",
+    "price": 7.99
+  }
+]
