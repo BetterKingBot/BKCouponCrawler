@@ -212,16 +212,9 @@ mydealz.de/gutscheine/burger-king-papier-coupons-bis-2409-1840299
 FAQ BetterKing Bot und Channel
 
 Wo finde ich die aktuellen Papiercoupons als Scan?
-Sofern es welche gibt, hier:
+Hier:
 mega.nz/folder/zWQkRIoD#-XRxtHFcyJZcgvOKx4gpZg
 Dieser Ordner dient außerdem als Archiv.
-
-Warum fehlen Papiercoupons im Bot/Channel?
-Seit dem 30.07.2022 gibt es keine Papiercoupons mehr direkt im Bot/Channel, da man diese manuell eintragen müsste und ich _noch_ keine Zeit hatte, ein System dafür zu bauen.
-Die aktuellen Papiercoupons finden sich immer auf MyDealz und in der oben verlinkten MEGA Cloud.
-
-Warum sind Payback Coupons nur manchmal direkt im Bot/Channel verfügbar?
-Weil sie derzeit von Hand eingetragen werden müssen und ich faul bin.
 
 Welche Daten speichert der Bot?
 Deine Benutzer-ID, deine Einstellungen und alle 48 Stunden einen Zeitstempel der letzten Bot verwendung.
@@ -245,7 +238,7 @@ Hier: github.com/coffeerhyder/BKCouponCrawler
 Wie kann ich Fehler melden oder Feedback einreichen?
 Per Mail: bkfeedback@pm.me
 
-Gibt es ähnliche open source Projekte für BK?
+Gibt es ähnliche Projekte für BK?
 Nein
 
 Gibt es sowas auch für McDonalds/KFC/...?
