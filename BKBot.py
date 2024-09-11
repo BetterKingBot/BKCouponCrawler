@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-import logging
 import math
 import traceback
 from copy import deepcopy
@@ -103,7 +102,10 @@ class BKBot:
         self.couponImageQRCache: dict = {}
         self.offerImageCache: dict = {}
         self.maintenanceMode = self.args.maintenancemode
-        self.crawler = BKCrawler()
+        if self.args.crawl:
+            self.crawler = BKCrawler(False)
+        else:
+            self.crawler = BKCrawler(True)
         self.crawler.setExportCSVs(False)
         self.crawler.setKeepHistoryDB(False)
         self.crawler.setKeepSimpleHistoryDB(False)
@@ -369,14 +371,12 @@ class BKBot:
         if isNewUser:
             menuText += '\nEi guude du bist ja neu hier :)'
         menuText += '\n' + getBotImpressum()
-        missingPaperCouponsText = self.crawler.getMissingPaperCouponsText()
-        if missingPaperCouponsText is not None:
-            # Legacy code
-            menuText += '\n<b>'
-            menuText += f'{SYMBOLS.WARNING}Derzeit im Bot fehlende Papiercoupons: {missingPaperCouponsText}'
+        if self.crawler.cachedMissingPaperCouponsText:
+            menuText += '\n---'
+            menuText += f"\n<b>{SYMBOLS.WARNING}Infos zu fehlenden Papiercoupons - es fehlen:</b>"
+            menuText += f"\n{self.crawler.cachedMissingPaperCouponsText}"
             if self.publicChannelName is not None:
                 menuText += f"\nVollständige Papiercouponbögen sind im <a href=\"{self.getPublicChannelFAQLink()}\">FAQ</a> verlinkt."
-            menuText += '</b>'
         if self.crawler.cachedFutureCouponsText is not None:
             menuText += '\n---'
             menuText += '\n' + self.crawler.cachedFutureCouponsText
@@ -405,14 +405,19 @@ class BKBot:
             await query.answer()
             # Delete last message containing menu as it is of no use for us anymore
             # await self.deleteMessage(chat_id=chat_id, messageID=query.message.message_id)
-        activeCoupons = self.getFilteredCouponsAsDict(CouponFilter(), True)
+        user = await self.getUser(chat_id)
+        cf = CouponFilter()
+        if cf.removeDuplicates is None:
+            cf.removeDuplicates = user.settings.hideDuplicates
+        activeCoupons = self.getFilteredCouponsAsDict(cf, True)
         await self.sendCouponOverviewWithChannelLinks(chat_id=chat_id, coupons=activeCoupons, useLongCouponTitles=True,
                                                       channelDB=self.crawler.couchdb[DATABASES.TELEGRAM_CHANNEL], infoDB=None, infoDBDoc=None)
 
         reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(SYMBOLS.BACK, callback_data=CallbackVars.MENU_MAIN)]])
-        menuText = "<b>Alle " + str(len(activeCoupons)) + " Coupons als Liste mit langen Titeln</b>"
+        menuText = f"<b>Alle {len(activeCoupons)} Coupons als Liste mit langen Titeln</b>"
         if self.getPublicChannelName() is not None:
-            menuText += "\nAlle Verlinkungen führen in den " + self.getPublicChannelHyperlinkWithCustomizedText("Channel") + "."
+            channelHyperlink = self.getPublicChannelHyperlinkWithCustomizedText("Channel")
+            menuText += f"\nAlle Verlinkungen führen in den {channelHyperlink}."
         await self.sendMessage(chat_id=chat_id, text=menuText, parse_mode="HTML", reply_markup=reply_markup, disable_web_page_preview=True)
         if query is not None:
             # Delete last message containing menu as it is of no use for us anymore
@@ -508,17 +513,20 @@ class BKBot:
             if view.allowModifyFilter:
                 # Inherit some filters from user settings
                 view = deepcopy(view)
-                couponFilter = view.getFilter()
+                cf = view.getFilter()
                 couponTypeStr = urlinfo['cs']
                 if couponTypeStr is not None and len(couponTypeStr) > 0:
-                    couponFilter.allowedCouponTypes = [int(couponTypeStr)]
+                    cf.allowedCouponTypes = [int(couponTypeStr)]
                 # First we only want to filter coupons. Sort them later according to user preference -> Needs less CPU cycles.
-                if couponFilter.isHidden is None and user.settings.displayHiddenUpsellingAppCouponsWithinGenericCategories is False:
+                if cf.isHidden is None and user.settings.displayHiddenUpsellingAppCouponsWithinGenericCategories is False:
                     # User does not want to see hidden coupons within generic categories
-                    couponFilter.isHidden = False
-                if couponFilter.isPlantBased is None and user.settings.displayPlantBasedCouponsWithinGenericCategories is False:
+                    cf.isHidden = False
+                if cf.isPlantBased is None and user.settings.displayPlantBasedCouponsWithinGenericCategories is False:
                     # User does not want to see plant based coupons within generic categories
-                    couponFilter.isPlantBased = False
+                    cf.isPlantBased = False
+                if cf.removeDuplicates is None:
+                    # Remove duplicated coupons, prefer cheaper ones?
+                    cf.removeDuplicates = user.settings.hideDuplicates
                 if view.highlightFavorites is None:
                     # User setting overrides unser param in view
                     view.highlightFavorites = user.settings.highlightFavoriteCouponsInButtonTexts
@@ -532,7 +540,7 @@ class BKBot:
                 menuText = couponCategory.getCategoryInfoText()
             if len(coupons) == 0:
                 # This should never happen
-                raise BetterBotException(SYMBOLS.DENY + ' <b>Ausnahmefehler: Es gibt derzeit keine Coupons!</b>',
+                raise BetterBotException(f'{SYMBOLS.DENY}<b>Ausnahmefehler: Es gibt derzeit keine Coupons!</b>',
                                          InlineKeyboardMarkup([[InlineKeyboardButton(SYMBOLS.BACK, callback_data=urlquery.url)]]))
             if action == 'dcss':
                 # Change sort of coupons
@@ -551,7 +559,7 @@ class BKBot:
             # Build bot menu
             urlquery_callbackBack = furl(urlquery.args["cb"])
             buttons = []
-            maxCouponsPerPage = 20
+            maxCouponsPerPage = 25
             paginationMax = math.ceil(len(coupons) / maxCouponsPerPage)
             desiredPage = int(urlquery.args.get("p", 1))
             if desiredPage > paginationMax:
@@ -926,8 +934,8 @@ class BKBot:
         await self.displayCouponWithImage(update, context, coupon, user)
         # Post user-menu into chat
         menuText = 'Coupon Details'
-        if not user.settings.displayQR and not coupon.forceDisplayQR():
-            menuText += '\n' + SYMBOLS.INFORMATION + 'Möchtest du QR-Codes angezeigt bekommen?\nSiehe Hauptmenü -> Einstellungen'
+        if not user.settings.displayQR and not coupon.plu is None:
+            menuText += f'\n{SYMBOLS.INFORMATION}Möchtest du QR-Codes angezeigt bekommen?\nSiehe Hauptmenü -> Einstellungen'
         await self.sendMessage(chat_id=update.effective_chat.id, text=menuText, parse_mode='HTML',
                                reply_markup=InlineKeyboardMarkup([[], [InlineKeyboardButton(SYMBOLS.BACK, callback_data=callbackBack)]]))
         # Delete previous message containing menu buttons from chat as we don't need it anymore.
@@ -1070,12 +1078,13 @@ class BKBot:
         return coupons
 
     def checkForNoCoupons(self, coupons: Union[dict, list]):
+        """ Throws exception if given list of coupons is empty. """
         if len(coupons) == 0:
             menuText = SYMBOLS.DENY + ' <b>Es gibt derzeit keine Coupons in den von dir ausgewählten Kategorien und/oder in Kombination mit den eingestellten Filtern!</b>'
             raise BetterBotException(menuText, InlineKeyboardMarkup([[InlineKeyboardButton(SYMBOLS.BACK, callback_data=CallbackVars.MENU_MAIN)]]))
 
     def getCouponImage(self, coupon: Coupon):
-        """ Returns either image URL or file or Telegram file_id of a given coupon. """
+        """ Returns either image URL or file or Telegram cached file_id of a given coupon. """
         cachedImageData = self.couponImageCache.get(coupon.id)
         """ Re-use Telegram file-ID if possible: https://core.telegram.org/bots/api#message
         According to the Telegram FAQ, such file_ids can be trusted to be persistent: https://core.telegram.org/bots/faq#can-i-count-on-file-ids-to-be-persistent """
@@ -1089,9 +1098,12 @@ class BKBot:
             # Return image file
             logging.debug(f"Returning coupon image file in path: {imagePath}")
             return open(imagePath, mode='rb')
+        elif coupon.type == CouponType.PAPER:
+            # Return special fallback image for paper coupons
+            return open("media/fallback_image_missing_coupon_image_paper.jpeg", mode='rb')
         else:
             # Return fallback image file -> Should usually not be required!
-            logging.warning("Returning coupon fallback image for path: " + imagePath)
+            logging.warning(f"Returning coupon fallback image for path: {imagePath}")
             return open("media/fallback_image_missing_coupon_image.jpeg", mode='rb')
 
     def getCouponImageQR(self, coupon: Coupon):
@@ -1531,10 +1543,10 @@ class BKBot:
             maxCouponsPerPage = 49
             maxPage = math.ceil(len(coupons) / maxCouponsPerPage)
             for page in range(1, maxPage + 1):
-                logging.info("Sending category page: " + str(page) + "/" + str(maxPage))
+                logging.info(f"Sending category page: {page}/{maxPage}")
                 couponOverviewText = couponCategory.getCategoryInfoText()
                 if maxPage > 1:
-                    couponOverviewText += "<b>Teil " + str(page) + "/" + str(maxPage) + "</b>"
+                    couponOverviewText += f"<b>Teil {page}/{maxPage}</b>"
                 couponOverviewText += '\n---'
                 # Calculate in which range the coupons of our current page are
                 startIndex = page * maxCouponsPerPage - maxCouponsPerPage

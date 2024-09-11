@@ -1,95 +1,61 @@
-import os
 from datetime import datetime
 
 import Helper
-from Helper import saveJson, getTimezone, loadJson
+from Helper import getTimezone, loadJson
 
-from BaseUtils import logging
+from UtilsCouponsDB import Coupon
 
-""" Helper to complete config file with data from 'paper_coupon_helper_ids.txt'. """
+""" Helper for adding paper coupons to the coupon system. """
 
 
-def main():
-    activePaperCouponInfo = getActivePaperCouponInfo()
-    if len(activePaperCouponInfo) == 0:
-        # logging.info("Failed to find any currently valid paper coupon candidates --> Cannot add additional information")
-        return
-    paperCouponConfig = loadPaperCouponConfigFile()
-    for paperIdentifier in activePaperCouponInfo.keys():
-        filepath = 'paper_coupon_data/paper_coupon_helper_ids_' + paperIdentifier + '.txt'
-        if not os.path.isfile(filepath):
-            # Shouldn't happen but it's not too fatal - maybe there are just no paper coupons available at this moment.
-            logging.warning('No file available for paper coupon char ' + paperIdentifier + ' | ' + filepath)
-            continue
-        mapping = {}
-        if paperIdentifier == 'NOCHAR':
-            # Build mapping for currently valid coupons without char
-            couponIDs = []
-            with open(os.path.join(os.getcwd(), filepath), encoding='utf-8') as infile:
-                lineNumber = 0
-                for line in infile:
-                    line = line.strip()
-                    couponInfo = line.split(':')
-                    couponIDStr = couponInfo[0]
-                    if not couponIDStr.isdecimal():
-                        raise Exception('Invalid paper coupon input: ' + line)
-                    if couponIDStr in couponIDs:
-                        logging.warning('Found at least one duplicate ID at line' + str(lineNumber) + ' : ' + couponIDStr)
-                        continue
-                    mapping[couponIDStr] = couponInfo[1]
-                    lineNumber += 1
-        else:
-            couponIDs = []
-            with open(os.path.join(os.getcwd(), filepath), encoding='utf-8') as infile:
-                lineNumber = 0
-                for line in infile:
-                    line = line.strip()
-                    if not line.isdecimal():
-                        raise Exception('Invalid paper coupon input: ' + line)
-                    couponIDStr = line
-                    if line in couponIDs:
-                        logging.warning('Found at least one duplicate ID at line' + str(lineNumber) + ' : ' + couponIDStr)
-                        continue
-                    couponIDs.append(couponIDStr)
-                    lineNumber += 1
-            if len(couponIDs) == 0:
-                raise Exception("Failed to find any mapping data in mapping file " + filepath)
-            # Validate array size
-            if len(couponIDs) < 47 or len(couponIDs) > 48:
-                logging.warning('Array length mismatch: ' + str(len(couponIDs)))
-            # Build mapping
-            number = 1
-            for couponIDStr in couponIDs:
-                # Correct number: Assume than when only 47 items are given, the payback code is missing -> That is usually number 47
-                if len(couponIDs) == 47 and number == 47:
-                    number = 48
-                mapping[couponIDStr] = paperIdentifier + str(number)
-                number += 1
-        # print('Mapping result = ' + str(mapping))
-
-        # Finally update our config
-        paperCouponConfig.setdefault(paperIdentifier, {})['mapping'] = mapping
-
-    # paperCouponConfig[paperChar]['mapping'] = mapping
-    # Update our config file accordingly
-    saveJson(Helper.Paths.paperCouponExtraDataPath, paperCouponConfig)
+def main() -> list:
+    thankyouMap = {"8.11.2024": "Danke an die MyDealz User DerShitstorm und rote_rakete: mydealz.de/deals/burger-king-coupons-gultig-vom-sa-07092024-bis-fr-08112024-2418876#reply-49124677"}
+    try:
+        papercs = loadJson("paper_coupon_data/coupons.json")
+        validcoupons = []
+        expireDates = set()
+        for paperc in papercs:
+            expiredateStr = paperc['expireDate']
+            expireDates.add(expiredateStr)
+            thankyouText = thankyouMap.get(expiredateStr)
+            coupon = Coupon.wrap(paperc)
+            coupon.id = paperc['uniqueID']  # Set custom uniqueID otherwise couchDB will create one later -> This is not what we want to happen!!
+            price = paperc['price']
+            if price is not None:
+                price = price * 100
+                coupon.price = price
+            else:
+                coupon.staticReducedPercent = 50
+            expiredate = datetime.strptime(expiredateStr + " 23:59:59", '%d.%m.%Y %H:%M:%S').astimezone(getTimezone())
+            coupon.timestampExpire = expiredate.timestamp()
+            coupon.type = Helper.CouponType.PAPER
+            if thankyouText is not None:
+                coupon.description = thankyouText
+            # Only add coupon if it is valid
+            if coupon.isValid():
+                validcoupons.append(coupon)
+        # Log inconsistent stuff
+        if len(expireDates) != 1:
+            print(f"Warnung: Ungleiche Ablaufdaten entdeckt! {expireDates}")
+        if len(papercs) != 48:
+            print(f"Warnung | Erwartete Anzahl Papiercoupons: 48 | Gefunden: {len(papercs)}")
+        return validcoupons
+    except:
+        print("Fehler beim Laden oder Verarbeiten der Papiercoupons")
+        return []
 
 
 if __name__ == "__main__":
     main()
 
 
-def getActivePaperCouponInfo() -> dict:
-    paperCouponInfo = {}
-    """ Load file which contains some extra data which can be useful to correctly determine the "CouponType" and expire date of paper coupons. """
-    for paperIdentifier, paperData in loadPaperCouponConfigFile().items():
-        validuntil = datetime.strptime(paperData['expire_date'] + ' 23:59:59', '%Y-%m-%d %H:%M:%S').astimezone(getTimezone()).timestamp()
-        if validuntil > Helper.getCurrentDate().timestamp():
-            newPaperData = paperData
-            newPaperData['expire_timestamp'] = validuntil
-            paperCouponInfo[paperIdentifier] = newPaperData
-    return paperCouponInfo
+def getValidPaperCouponList() -> list:
+    return main()
 
 
-def loadPaperCouponConfigFile() -> dict:
-    return loadJson(Helper.Paths.paperCouponExtraDataPath)
+def getValidPaperCouponDict() -> dict:
+    list = main()
+    couponDict = {}
+    for coupon in list:
+        couponDict[coupon.id] = coupon
+    return couponDict
