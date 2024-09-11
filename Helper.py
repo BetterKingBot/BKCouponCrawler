@@ -61,11 +61,6 @@ def setImageURLQuality(image_url: str) -> str:
     return image_url.replace('%{resolution}', '320')
 
 
-def normalizeString(string: str):
-    """ Returns lowercase String with all non-word characters removed. """
-    return re.sub(r'[\W_]+', '', string).lower()
-
-
 def splitStringInPairs(string: str) -> str:
     """ Changes input to pairs of max. 4 separated by spaces. """
     addedCharsBlock = 0
@@ -97,8 +92,9 @@ def shortenProductNames(couponTitle: str) -> str:
     couponTitle = re.sub(r"KING\s*(Pommes)", pommesReplacement, couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Fries", pommesReplacement, couponTitle, flags=re.IGNORECASE)  # E.g. 'Curly Fries'
     couponTitle = re.sub(r"(Coca[\s-]*)?Cola", colaReplacement, couponTitle, flags=re.IGNORECASE)
-    """ E.g. "Big KING" --> "Big K" """
-    couponTitle = re.sub(r"(Big|Bacon|Fish|Halloumi)\s*KING", r"\1", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"Big KING", r"BigK", couponTitle, flags=re.IGNORECASE)
+    """ Remove "KING" from some product titles """
+    couponTitle = re.sub(r"(Bacon|Fish|Halloumi)\s*KING", r"\1", couponTitle, flags=re.IGNORECASE)
     """ E.g. "KING Shake" --> "Shake" """
     couponTitle = re.sub(r"KING\s*(Jr\.?\s*Meal|Jr\.?\s*Menü|Shake|Nuggets?|Wings?|Onion[\s-]*Rings?)", r"\1", couponTitle, flags=re.IGNORECASE)
     """ 'Meta' replaces """
@@ -136,7 +132,7 @@ def shortenProductNames(couponTitle: str) -> str:
 
     """ Down below comes other bullshit they sometimes place into the subtitle fields. """
     couponTitle = re.sub(r"\s*oder\s*", r"", couponTitle, flags=re.IGNORECASE)
-    couponTitle = re.sub(r"\s*zum\s*Preis\s*von\s*(1!?|einem|einer)", "", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"\s*zum\s*Preis\s*von\s*(1!?|einem|einer)(\s*Portion)?", "", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"^.{0,3}?Den Code zur Einlösung findest du im QR-Code.*", "", couponTitle, flags=re.IGNORECASE)
     # Remove e.g. "Im KING Menü (+ 50 Cent)"
     couponTitle = re.sub(r"Im King Menü \(\+[^)]+\)", "", couponTitle, flags=re.IGNORECASE)
@@ -335,7 +331,11 @@ def couponTitleContainsFries(title: str) -> bool:
 
 def couponTitleContainsDrink(title: str) -> bool:
     titleLower = title.lower()
-    if 'cola' in titleLower or re.compile(r'red\s*bull').search(titleLower):
+    if 'cola' in titleLower:
+        return True
+    elif re.compile(r'red\s*bull').search(titleLower):
+        return True
+    elif re.compile(r'monster\s*energy').search(titleLower):
         return True
     else:
         return False
@@ -401,8 +401,10 @@ def formatSeconds(seconds: float) -> str:
     return str(timedelta(seconds=seconds))
 
 
-def isValidImageFile(path: str) -> bool:
+def isValidImageFile(path: Union[str, None]) -> bool:
     """ Checks if a valid image file exists under given filepath. """
+    if path is None:
+        return False
     try:
         im = Image.open(path)
         im.verify()
@@ -431,7 +433,6 @@ BotAllowedCouponTypes = [CouponType.APP, CouponType.PAPER, CouponType.SPECIAL, C
 
 class Paths:
     configPath = 'config.json'
-    paperCouponExtraDataPath = 'config_paper_coupons.json'
     extraCouponConfigPath = 'config_extra_coupons.json'
 
 

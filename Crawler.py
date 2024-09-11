@@ -67,7 +67,7 @@ class UserStats:
 
 class BKCrawler:
 
-    def __init__(self):
+    def __init__(self, allowAddExtraCouponsOnStartup: bool = True):
         self.cfg = loadConfig()
         if self.cfg is None:
             raise Exception('Broken or missing config')
@@ -79,7 +79,6 @@ class BKCrawler:
         self.keepSimpleHistoryDB = False
         self.storeCouponAPIDataAsJson = False
         self.exportCSVs = False
-        self.missingPaperCouponPLUs = []
         self.cachedMissingPaperCouponsText = None
         self.cachedFutureCouponsText = None
         self.cachedFutureCoupons = []
@@ -153,7 +152,8 @@ class BKCrawler:
             os.makedirs(getPathImagesProducts())
         # Do this here so manually added coupons will get added on application start without extra crawl process
         self.migrateDBs()
-        self.addExtraCoupons(crawledCouponsDict={}, immediatelyAddToDB=True)
+        if allowAddExtraCouponsOnStartup:
+            self.addExtraCoupons(crawledCouponsDict={}, immediatelyAddToDB=True)
         # Make sure that our cache gets filled on init
         couponDB = self.getCouponDB()
         self.updateCaches(couponDB)
@@ -252,7 +252,7 @@ class BKCrawler:
         req = httpx.get(
             url='https://czqk28jt.apicdn.sanity.io/v1/graphql/prod_bk_de/default?operationName=featureSortedLoyaltyOffers&variables=%7B%22id%22%3A%22feature-loyalty-offers-ui-singleton%22%7D&query=query+featureSortedLoyaltyOffers%28%24id%3AID%21%29%7BLoyaltyOffersUI%28id%3A%24id%29%7B_id+sortedSystemwideOffers%7B...SystemwideOffersFragment+__typename%7D__typename%7D%7Dfragment+SystemwideOffersFragment+on+SystemwideOffer%7B_id+_type+loyaltyEngineId+name%7BlocaleRaw%3AdeRaw+__typename%7Ddescription%7BlocaleRaw%3AdeRaw+__typename%7DmoreInfo%7BlocaleRaw%3AdeRaw+__typename%7DhowToRedeem%7BenRaw+__typename%7DbackgroundImage%7B...MenuImageFragment+__typename%7DshortCode+mobileOrderOnly+redemptionMethod+daypart+redemptionType+upsellOptions%7B_id+loyaltyEngineId+description%7BlocaleRaw%3AdeRaw+__typename%7DlocalizedImage%7Blocale%3Ade%7B...MenuImagesFragment+__typename%7D__typename%7Dname%7BlocaleRaw%3AdeRaw+__typename%7D__typename%7DofferPrice+marketPrice%7B...on+Item%7B_id+_type+vendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7D...on+Combo%7B_id+_type+vendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7D__typename%7DlocalizedImage%7Blocale%3Ade%7B...MenuImagesFragment+__typename%7D__typename%7DuiPattern+lockedOffersPanel%7BcompletedChallengeHeader%7BlocaleRaw%3AdeRaw+__typename%7DcompletedChallengeDescription%7BlocaleRaw%3AdeRaw+__typename%7D__typename%7DpromoCodePanel%7BpromoCodeDescription%7BlocaleRaw%3AdeRaw+__typename%7DpromoCodeLabel%7BlocaleRaw%3AdeRaw+__typename%7DpromoCodeLink+__typename%7Dincentives%7B__typename+...on+Combo%7B_id+_type+mainItem%7B_id+_type+operationalItem%7Bdaypart+__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7DisOfferBenefit+__typename%7D...on+Item%7B_id+_type+operationalItem%7Bdaypart+__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7D...on+Picker%7B_id+_type+options%7Boption%7B__typename+...on+Combo%7B_id+_type+mainItem%7B_id+_type+operationalItem%7Bdaypart+__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7D...on+Item%7B_id+_type+operationalItem%7Bdaypart+__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7D%7D__typename%7DisOfferBenefit+__typename%7D...on+OfferDiscount%7B_id+_type+discountValue+discountType+__typename%7D...on+OfferActivation%7B_id+_type+__typename%7D...on+SwapMapping%7B_type+__typename%7D%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7Drules%7B...on+RequiresAuthentication%7BrequiresAuthentication+__typename%7D...on+LoyaltyBetweenDates%7BstartDate+endDate+__typename%7D__typename%7D__typename%7Dfragment+MenuImageFragment+on+Image%7Bhotspot%7Bx+y+height+width+__typename%7Dcrop%7Btop+bottom+left+right+__typename%7Dasset%7Bmetadata%7Blqip+palette%7Bdominant%7Bbackground+foreground+__typename%7D__typename%7D__typename%7D_id+__typename%7D__typename%7Dfragment+MenuImagesFragment+on+Images%7Bapp%7B...MenuImageFragment+__typename%7Dkiosk%7B...MenuImageFragment+__typename%7DimageDescription+__typename%7Dfragment+VendorConfigsFragment+on+VendorConfigs%7Bcarrols%7B...VendorConfigFragment+__typename%7DcarrolsDelivery%7B...VendorConfigFragment+__typename%7Dncr%7B...VendorConfigFragment+__typename%7DncrDelivery%7B...VendorConfigFragment+__typename%7Doheics%7B...VendorConfigFragment+__typename%7DoheicsDelivery%7B...VendorConfigFragment+__typename%7Dpartner%7B...VendorConfigFragment+__typename%7DpartnerDelivery%7B...VendorConfigFragment+__typename%7DproductNumber%7B...VendorConfigFragment+__typename%7DproductNumberDelivery%7B...VendorConfigFragment+__typename%7Dsicom%7B...VendorConfigFragment+__typename%7DsicomDelivery%7B...VendorConfigFragment+__typename%7Dqdi%7B...VendorConfigFragment+__typename%7DqdiDelivery%7B...VendorConfigFragment+__typename%7Dqst%7B...VendorConfigFragment+__typename%7DqstDelivery%7B...VendorConfigFragment+__typename%7Drpos%7B...VendorConfigFragment+__typename%7DrposDelivery%7B...VendorConfigFragment+__typename%7DsimplyDelivery%7B...VendorConfigFragment+__typename%7DsimplyDeliveryDelivery%7B...VendorConfigFragment+__typename%7Dtablet%7B...VendorConfigFragment+__typename%7DtabletDelivery%7B...VendorConfigFragment+__typename%7D__typename%7Dfragment+VendorConfigFragment+on+VendorConfig%7BpluType+parentSanityId+pullUpLevels+constantPlu+discountPlu+quantityBasedPlu%7Bquantity+plu+qualifier+__typename%7DmultiConstantPlus%7Bquantity+plu+qualifier+__typename%7DparentChildPlu%7Bplu+childPlu+__typename%7DsizeBasedPlu%7BcomboPlu+comboSize+__typename%7D__typename%7D',
             headers=HEADERS, timeout=120)
-        print(req.text)
+        logging.debug(req.text)
         apiResponse = req.json()
         if self.storeCouponAPIDataAsJson:
             # Save API response so we can easily use this data for local testing later on.
@@ -326,15 +326,15 @@ class BKCrawler:
                                 titleFull = title + ' ' + subtitle
                                 # Log seemingly strange values
                                 if not subtitle.startswith('+'):
-                                    logging.info(f'Coupon {uniqueCouponID}: Possible subtitle which should not be included in coupon title because it doesnt start with a plus sumbol: {subtitle=} | {title=} | {titleFull=}')
+                                    logging.info(
+                                        f'Coupon {uniqueCouponID}: Possible subtitle which should not be included in coupon title because it doesnt start with a plus sumbol: {subtitle=} | {title=} | {titleFull=}')
                                 elif '+' not in subtitle:
-                                    logging.info(f'Coupon {uniqueCouponID}: Possible subtitle which should not be included in coupon title because it doesnt contain a plus symbol: {subtitle=} | {title=} | {titleFull=}')
+                                    logging.info(
+                                        f'Coupon {uniqueCouponID}: Possible subtitle which should not be included in coupon title because it doesnt contain a plus symbol: {subtitle=} | {title=} | {titleFull=}')
 
-                    titleFull = sanitizeCouponTitle(titleFull)
                     price = couponBK['offerPrice']
                     plu = couponBK['shortCode']
-                    coupon = Coupon(id=uniqueCouponID, uniqueID=uniqueCouponID, plu=plu, title=titleFull, subtitle=subtitle, titleShortened=shortenProductNames(titleFull),
-                                    type=CouponType.APP)
+                    coupon = Coupon(id=uniqueCouponID, uniqueID=uniqueCouponID, plu=plu, title=titleFull, subtitle=subtitle, type=CouponType.APP)
                     # ID which can be used to view coupon in browser
                     coupon.webviewID = couponBK.get('loyaltyEngineId')
                     if childindex > 0:
@@ -418,10 +418,8 @@ class BKCrawler:
         logging.info(f'Total coupons crawl time: {getFormattedPassedTime(timestampCrawlStart)}')
 
     def addExtraCoupons(self, crawledCouponsDict: dict, immediatelyAddToDB: bool):
-        """ Adds extra coupons which have been manually added to config_extra_coupons.json.
+        """ Adds extra coupons which have been manually added to config_extra_coupons.json and paper coupons.
          This will only add VALID coupons to DB! """
-        # First prepare extra coupons config because manual steps are involved to make this work
-        PaperCouponHelper.main()
         extraCouponsToAdd = self.getValidExtraCoupons()
         if immediatelyAddToDB and len(extraCouponsToAdd) > 0:
             # Add items to DB
@@ -430,12 +428,10 @@ class BKCrawler:
             if dbWasUpdated:
                 # Important!
                 self.downloadProductiveCouponDBImagesAndCreateQRCodes()
-        else:
-            for coupon in extraCouponsToAdd.values():
-                crawledCouponsDict[coupon.uniqueID] = coupon
+        for coupon in extraCouponsToAdd.values():
+            crawledCouponsDict[coupon.uniqueID] = coupon
 
     def getValidExtraCoupons(self) -> dict:
-        PaperCouponHelper.main()
         extraCouponData = loadJson(Paths.extraCouponConfigPath)
         extraCouponsJson = extraCouponData["extra_coupons"]
         validExtraCoupons = {}
@@ -448,6 +444,15 @@ class BKCrawler:
             # Only add coupon if it is valid
             if coupon.isValid():
                 validExtraCoupons[coupon.uniqueID] = coupon
+        if len(validExtraCoupons) > 0:
+            logging.info(f"Number of valid Payback coupons: {len(validExtraCoupons)}")
+        # Now get paper coupons
+        papercouponlist = PaperCouponHelper.getValidPaperCouponList()
+        if len(papercouponlist) > 0:
+            logging.info(f"Number of valid paper coupons: {len(papercouponlist)}")
+        # Add items to existing dict
+        for coupon in papercouponlist:
+            validExtraCoupons[coupon.id] = coupon
         return validExtraCoupons
 
     def processCrawledCoupons(self, crawledCouponsDict: dict):
@@ -455,17 +460,36 @@ class BKCrawler:
         dateStart = datetime.now()
         """ Now tag original price values for 'duplicated' coupons: If we got two coupons containing the same product but we only found the original price for one of them,
          we can set this on the other one(s) too. """
+        # Sanitize crawled data
+        for coupon in crawledCouponsDict.values():
+            coupon.title = sanitizeCouponTitle(coupon.title)
         couponTitleMapping = getCouponTitleMapping(crawledCouponsDict)
+        numberofItemsWithoutImage = 0
         for couponsContainingSameProducts in couponTitleMapping.values():
-            if len(couponsContainingSameProducts) > 1:
-                originalPrice = None
-                for coupon in couponsContainingSameProducts:
-                    if originalPrice is None:
-                        originalPrice = coupon.getPriceCompare()
-                if originalPrice is not None:
-                    for coupon in couponsContainingSameProducts:
-                        if coupon.getPriceCompare() is None:
-                            coupon.priceCompare = originalPrice
+            if len(couponsContainingSameProducts) == 1:
+                continue
+            originalPrice = None
+            imageURL = None
+            staticReducedPercent = None
+            # Collect extra data
+            for coupon in couponsContainingSameProducts:
+                if originalPrice is None:
+                    originalPrice = coupon.priceCompare
+                if imageURL is None:
+                    imageURL = coupon.imageURL
+                if staticReducedPercent is None:
+                    staticReducedPercent = coupon.staticReducedPercent
+            # Set extra data where it is missing
+            for coupon in couponsContainingSameProducts:
+                if coupon.priceCompare is None and originalPrice is not None:
+                    coupon.priceCompare = originalPrice
+                if coupon.imageURL is None and imageURL is not None:
+                    coupon.imageURL = imageURL
+                if coupon.staticReducedPercent is None and staticReducedPercent is not None:
+                    coupon.staticReducedPercent = staticReducedPercent
+        for coupon in crawledCouponsDict.values():
+            if coupon.imageURL is None:
+                numberofItemsWithoutImage += 1
         # Collect items we want to add to DB
         couponsToAddToDB = {}
         # Get rid of invalid coupons so we won't even bother adding them to our DB.
@@ -491,6 +515,8 @@ class BKCrawler:
                 logging.info(f'{coupon}')
             logging.info(getLogSeparatorString())
         logging.info(f'Crawled coupons: {len(crawledCouponsDict)} | To be added to DB: {len(couponsToAddToDB)}')
+        logging.info(f"Number of coupons without images: {numberofItemsWithoutImage}")
+        logging.info(f"Number of duplicated coupons: {len(crawledCouponsDict) - len(couponTitleMapping)}")
         infoDatabase = self.getInfoDB()
         infoDBDoc = InfoEntry.load(infoDatabase, DATABASES.INFO_DB)
         couponDB = self.getCouponDB()
@@ -718,7 +744,7 @@ class BKCrawler:
         # Overwrite old cache
         self.cachedAvailableCouponCategories = newCachedAvailableCouponCategories
         self.cachedFutureCoupons = sorted(futureCoupons,
-                                   key=lambda x: 0 if x.getStartDatetime() is None else x.getStartDatetime().timestamp())
+                                          key=lambda x: 0 if x.getStartDatetime() is None else x.getStartDatetime().timestamp())
         if offerDB is not None:
             validOffers = []
             for offerID in offerDB:
@@ -741,35 +767,26 @@ class BKCrawler:
                 self.cachedFutureCouponsText += "\n" + thisCouponText
 
     def updateCachedMissingPaperCouponsInfo(self, couponDB: Database):
-        paperCouponMapping = getCouponMappingForCrawler()
+        paperCouponMapping = {}
+        for couponID in couponDB:
+            coupon = Coupon.load(id=couponID, db=couponDB)
+            if coupon.type == CouponType.PAPER:
+                clist = paperCouponMapping.setdefault(coupon.getExpireDateFormatted(), [])
+                clist.append(coupon)
         self.cachedMissingPaperCouponsText = None
-        missingPaperPLUs = []
-        for mappingCoupon in paperCouponMapping.values():
-            if mappingCoupon.id not in couponDB:
-                missingPaperPLUs.append(mappingCoupon.plu)
-        missingPaperPLUs.sort()
-        if len(missingPaperPLUs) > 0:
-            self.missingPaperCouponPLUs = missingPaperPLUs
-            for missingPLU in missingPaperPLUs:
+        for expireDateFormatted, coupons in paperCouponMapping.items():
+            numberofMissingPaperCoupons = 48 - len(coupons)
+            if numberofMissingPaperCoupons > 0:
                 if self.cachedMissingPaperCouponsText is None:
-                    self.cachedMissingPaperCouponsText = missingPLU
+                    self.cachedMissingPaperCouponsText = ""
                 else:
-                    self.cachedMissingPaperCouponsText += ', ' + missingPLU
-            logging.info("Missing paper coupons: " + self.cachedMissingPaperCouponsText)
+                    self.cachedMissingPaperCouponsText += "\n"
+                self.cachedMissingPaperCouponsText += f"{numberofMissingPaperCoupons} Coupons gültig bis {expireDateFormatted}"
+        if self.cachedMissingPaperCouponsText is not None:
+            logging.info(f"Missing paper coupons text: {self.cachedMissingPaperCouponsText}")
 
     def getCachedCouponCategory(self, couponSrc: Union[CouponType, int]):
         return self.cachedAvailableCouponCategories.get(couponSrc)
-
-    def getMissingPaperCouponsText(self) -> Union[str, None]:
-        if len(self.missingPaperCouponPLUs) == 0:
-            return None
-        cachedMissingPaperCouponsText = ''
-        for missingPLU in self.missingPaperCouponPLUs:
-            if len(cachedMissingPaperCouponsText) == 0:
-                cachedMissingPaperCouponsText = missingPLU
-            else:
-                cachedMissingPaperCouponsText += ', ' + missingPLU
-        return cachedMissingPaperCouponsText
 
     def addCouponsToDB(self, couponDB: Database, couponsToAddToDB: Union[dict, List[Coupon]]) -> bool:
         if len(couponsToAddToDB) == 0:
@@ -931,7 +948,8 @@ class BKCrawler:
             else:
                 desiredCoupons[uniqueCouponID] = coupon
         # Remove duplicates if needed and if it makes sense to attempt that
-        if couponfilter.removeDuplicates is True and (couponfilter.allowedCouponTypes is None or (couponfilter.allowedCouponTypes is not None and len(couponfilter.allowedCouponTypes) > 1)):
+        if couponfilter.removeDuplicates is True and (
+                couponfilter.allowedCouponTypes is None or (couponfilter.allowedCouponTypes is not None and len(couponfilter.allowedCouponTypes) > 1)):
             desiredCoupons = removeDuplicatedCoupons(desiredCoupons)
         # Now check if the result shall be sorted
         if couponfilter.sortCode is not None and sortIfSortCodeIsGivenInCouponFilter:
@@ -994,10 +1012,10 @@ def downloadCouponImageIfNonExistant(coupon: Coupon) -> bool:
 def downloadImageIfNonExistant(url: str, path: str) -> bool:
     if url is None or path is None:
         return False
+    elif os.path.exists(path):
+        # Image already exists
+        return False
     try:
-        if os.path.exists(path):
-            # Image already exists
-            return False
         logging.info('Downloading image to: ' + path)
         r = requests.get(url, allow_redirects=True)
         open(path, mode='wb').write(r.content)
@@ -1029,19 +1047,6 @@ def generateQRImageIfNonExistant(qrCodeData: str, path: str) -> bool:
     img = qr.make_image(fill_color="#4A1E0D", back_color="white")
     img.save(path)
     return True
-
-
-def getCouponMappingForCrawler() -> dict:
-    paperCouponConfig = PaperCouponHelper.getActivePaperCouponInfo()
-    paperCouponMapping = {}
-    for pluIdentifier, paperData in paperCouponConfig.items():
-        mappingTmp = paperData.get('mapping')
-        if mappingTmp is not None:
-            expireTimestamp = paperData['expire_timestamp']
-            for uniquePaperCouponID, plu in mappingTmp.items():
-                paperCouponMapping[uniquePaperCouponID] = Coupon(id=uniquePaperCouponID, type=CouponType.PAPER, plu=plu, timestampExpire=expireTimestamp,
-                                                                 dateFormattedExpire=formatDateGerman(expireTimestamp))
-    return paperCouponMapping
 
 
 def getLogSeparatorString() -> str:

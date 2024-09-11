@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from datetime import datetime
 from enum import Enum
 from io import BytesIO
@@ -12,7 +13,7 @@ from couchdb.mapping import TextField, FloatField, ListField, IntegerField, Bool
 from pydantic import BaseModel
 
 from BotUtils import getImageBasePath
-from Helper import getTimezone, getCurrentDate, getFilenameFromURL, SYMBOLS, normalizeString, formatDateGerman, couponTitleContainsFriesAndDrink, BotAllowedCouponTypes, \
+from Helper import getTimezone, getCurrentDate, getFilenameFromURL, SYMBOLS, formatDateGerman, couponTitleContainsFriesAndDrink, BotAllowedCouponTypes, \
     CouponType, \
     formatPrice, couponTitleContainsVeggieFood, shortenProductNames, couponTitleContainsPlantBasedFood
 
@@ -23,8 +24,8 @@ class CouponFilter(BaseModel):
     activeOnly: Optional[bool] = True
     isNotYetActive: Optional[Union[bool, None]] = None
     containsFriesAndCoke: Optional[Union[bool, None]] = None
-    removeDuplicates: Optional[
-        bool] = False  # Enable to filter duplicated coupons for same products - only returns cheapest of all
+    # Enable to filter duplicated coupons for same products - only returns cheapest of all
+    removeDuplicates: Optional[Union[bool, None]] = None
     allowedCouponTypes: Optional[Union[List[int], None]] = None  # None = allow all sources!
     isNew: Optional[Union[bool, None]] = None
     isHidden: Optional[Union[bool, None]] = None
@@ -109,8 +110,8 @@ class CouponView:
     def getFilter(self) -> CouponFilter:
         return self.couponfilter
 
-    def __init__(self, couponfilter: CouponFilter, includeVeggieSymbol: Union[bool, None] = None, highlightFavorites: Union[bool, None] = None, allowModifyFilter: bool = True,
-                 title: str = None):
+    def __init__(self, couponfilter: CouponFilter, includeVeggieSymbol: Union[bool, None] = None, highlightFavorites: Union[bool, None] = None,
+                 allowModifyFilter: bool = True, title: str = None):
         self.title = title
         self.couponfilter = couponfilter
         self.includeVeggieSymbol = includeVeggieSymbol
@@ -133,15 +134,15 @@ class CouponViews:
     ALL = CouponView(couponfilter=CouponFilter(sortCode=CouponSortModes.MENU_PRICE.getSortCode(), isEatable=True), title="Alle Coupons")
     ALL_WITHOUT_MENU = CouponView(couponfilter=CouponFilter(sortCode=CouponSortModes.PRICE.getSortCode(), containsFriesAndCoke=False, isEatable=True), title="Alle Coupons ohne Menü")
     ALL_WITH_MENU = CouponView(couponfilter=CouponFilter(sortCode=CouponSortModes.PRICE.getSortCode(), containsFriesAndCoke=True, isEatable=True), title="Alle Coupons mit Menü")
-    CATEGORY = CouponView(couponfilter=CouponFilter(sortCode=CouponSortModes.MENU_PRICE.getSortCode()))
-    CATEGORY_WITHOUT_MENU = CouponView(couponfilter=CouponFilter(sortCode=CouponSortModes.MENU_PRICE.getSortCode(), containsFriesAndCoke=False))
+    CATEGORY = CouponView(couponfilter=CouponFilter(sortCode=CouponSortModes.MENU_PRICE.getSortCode(), removeDuplicates=False))
+    CATEGORY_WITHOUT_MENU = CouponView(couponfilter=CouponFilter(sortCode=CouponSortModes.MENU_PRICE.getSortCode(), containsFriesAndCoke=False, removeDuplicates=False))
     HIDDEN_APP_COUPONS_ONLY = CouponView(
-        couponfilter=CouponFilter(sortCode=CouponSortModes.PRICE.getSortCode(), allowedCouponTypes=[CouponType.APP], isHidden=True), title="App Coupons versteckte")
+        couponfilter=CouponFilter(sortCode=CouponSortModes.PRICE.getSortCode(), allowedCouponTypes=[CouponType.APP], isHidden=True, removeDuplicates=False), title="App Coupons versteckte")
     VEGGIE = CouponView(couponfilter=CouponFilter(sortCode=CouponSortModes.PRICE.getSortCode(), isVeggie=True, isEatable=True), includeVeggieSymbol=False,
                         title=f"{SYMBOLS.BROCCOLI}Veggie Coupons{SYMBOLS.BROCCOLI}")
     MEAT_WITHOUT_PLANT_BASED = CouponView(couponfilter=CouponFilter(sortCode=CouponSortModes.PRICE.getSortCode(), isPlantBased=False, isEatable=True), title="Fleisch ohne Plant Based Coupons")
     # Dummy item basically only used for holding default sortCode for users' favorites
-    FAVORITES = CouponView(couponfilter=CouponFilter(sortCode=CouponSortModes.PRICE.getSortCode()), highlightFavorites=False, allowModifyFilter=False,
+    FAVORITES = CouponView(couponfilter=CouponFilter(sortCode=CouponSortModes.PRICE.getSortCode(), removeDuplicates=False), highlightFavorites=False, allowModifyFilter=False,
                            title=f"{SYMBOLS.STAR}Favoriten{SYMBOLS.STAR}")
 
 
@@ -197,13 +198,6 @@ class Coupon(Document):
     def __str__(self):
         return f'{self.id=} | {self.plu} | {self.getTitle()} | {self.getPriceFormatted()} | START: {self.getStartDateFormatted()} | END {self.getExpireDateFormatted()}  | WEBVIEW: {self.getWebviewURL()}'
 
-    def forceDisplayQR(self) -> bool:
-        if self.plu is None:
-            # No readable PLU code -> QR code is needed to order this item.
-            return True
-        else:
-            return False
-
     def getPLUOrUniqueIDOrRedemptionHint(self) -> str:
         """ Returns PLU if existant, returns UNIQUE_ID otherwise. """
         if self.plu is not None:
@@ -216,7 +210,10 @@ class Coupon(Document):
                 return self.id
 
     def getNormalizedTitle(self) -> Union[str, None]:
-        return normalizeString(self.getTitle())
+        title = self.getTitle()
+        title = shortenProductNames(title)
+        title = re.sub(r'[\W_]+', '', title).lower()
+        return title
 
     def getTitle(self) -> Union[str, None]:
         if self.paybackMultiplicator is not None:
@@ -426,19 +423,17 @@ class Coupon(Document):
             return fallback
 
     def getPriceCompareFormatted(self, fallback=None) -> Union[str, None]:
-        priceCompare = self.getPriceCompare()
-        if priceCompare is not None:
-            return formatPrice(priceCompare)
+        if self.priceCompare is not None:
+            return formatPrice(self.priceCompare)
         else:
             return fallback
 
     def getReducedPercentage(self) -> Union[float, None]:
-        priceCompare = self.getPriceCompare()
         if self.paybackMultiplicator is not None:
             # 0.5 points per euro (= base discount of 0.5% without higher multiplicator)
             return 0.5 * self.paybackMultiplicator
-        elif self.price is not None and priceCompare is not None:
-            return (1 - (self.price / priceCompare)) * 100
+        elif self.price is not None and self.priceCompare is not None:
+            return (1 - (self.price / self.priceCompare)) * 100
         elif self.staticReducedPercent is not None:
             return self.staticReducedPercent
         else:
@@ -457,18 +452,10 @@ class Coupon(Document):
         else:
             return fallback
 
-    def getAddedVia(self):
-        """ Returns origin of how this coupon got added to DB e.g. API, by admin etc. """
-        return self.addedVia
-
-    def getCouponType(self):
-        return self.type
-
     def getUniqueIdentifier(self) -> str:
         """ Returns an unique identifier String which can be used to compare coupon objects. """
-        expiredateStr = self.getExpireDateFormatted(fallback='undefined')
-        return self.id + '_' + (
-            "undefined" if self.plu is None else self.plu) + '_' + expiredateStr + '_' + self.imageURL
+        plustring = "undefined" if self.plu is None else self.plu
+        return f'{self.id}_{plustring}_{self.timestampExpire}_{self.imageURL}'
 
     def getComparableValue(self) -> str:
         """ Returns value which can be used to compare given coupon object to another one.
@@ -477,7 +464,9 @@ class Coupon(Document):
           """
         return self.getTitle().lower() + str(self.price)
 
-    def getImagePath(self) -> str:
+    def getImagePath(self) -> Union[str, None]:
+        if self.imageURL is None:
+            return None
         if self.imageURL.startswith('file://'):
             # Image should be present in local storage: Use pre-given path
             return self.imageURL.replace('file://', '')
@@ -505,6 +494,16 @@ class Coupon(Document):
             return self.webviewURL
         else:
             return None
+
+    def getDescription(self) -> Union[str, None]:
+        description = self.description
+        if self.type == CouponType.PAPER and self.imageURL is not None:
+            if description is None:
+                description = ""
+            elif len(description) > 0:
+                description += "\n"
+            description += f"{SYMBOLS.WARNING}Achtung!\nDerzeit fehlen die original Produktbilder von Papiercoupons!\nDas Bild dieses Coupons stammt vom gleichnamigen App Coupon! Es gelten die Textangaben in den Buttons und hier im Post-Text, nicht die aus den Bildern!!"
+        return description
 
     def generateCouponShortText(self, highlightIfNew: bool, includeVeggieSymbol: bool, plumode: CouponTextRepresentationPLUMode) -> str:
         """ Returns e.g. "Y15 | 2Whopper+M🍟+0,4Cola | 8,99€" """
@@ -588,8 +587,9 @@ class Coupon(Document):
         expireDateFormatted = self.getExpireDateFormatted()
         if expireDateFormatted is not None:
             couponText += '\nGültig bis ' + expireDateFormatted
-        if self.description is not None:
-            couponText += "\n" + self.description
+        description = self.getDescription()
+        if description is not None:
+            couponText += "\n" + description
         webviewURL = self.getWebviewURL()
         if self.plu is None:
             couponText += f'\n{SYMBOLS.WARNING} Keine nennbare PLU verfügbar -> QR Code zeigen!'
@@ -833,8 +833,6 @@ class User(Document):
                 coupon = Coupon.wrap(coupon)  # We want a 'real' coupon object
                 unavailableFavoriteCoupons.append(coupon)
         # Sort all coupon arrays by price
-        if self.settings.hideDuplicates:
-            availableFavoriteCoupons = removeDuplicatedCoupons(availableFavoriteCoupons)
         if returnSortedCoupons:
             favoritesFilter = CouponViews.FAVORITES.getFilter()
             availableFavoriteCoupons = sortCouponsAsList(availableFavoriteCoupons, favoritesFilter.sortCode)
@@ -1085,7 +1083,9 @@ def getCouponTitleMapping(coupons: Union[dict, list]) -> dict:
         coupons = coupons.values()
     couponTitleMappingTmp = {}
     for coupon in coupons:
-        couponTitleMappingTmp.setdefault(coupon.getNormalizedTitle(), []).append(coupon)
+        normalizedTitle = coupon.getNormalizedTitle()
+        dupeslist = couponTitleMappingTmp.setdefault(normalizedTitle, [])
+        dupeslist.append(coupon)
     return couponTitleMappingTmp
 
 
@@ -1183,7 +1183,7 @@ USER_SETTINGS_ON_OFF = {
     },
     "hideDuplicates": {
         "category": SettingCategories.GLOBAL_FILTERS,
-        "description": "Duplikate ausblenden |App CP bevorz.",
+        "description": "Duplikate ausblenden | Günstigere CP bevorz.",
         "default": False
     },
     "highlightFavoriteCouponsInButtonTexts": {
@@ -1256,10 +1256,10 @@ if DISPLAY_BETA_SETTING:
 
 
 def removeDuplicatedCoupons(coupons: Union[List[Coupon], dict]) -> dict:
-    couponTitleMappingTmp = getCouponTitleMapping(coupons)
+    couponTitleMapping = getCouponTitleMapping(coupons)
     # Now clean our mapping: Sometimes one product may be available twice with multiple prices -> We want exactly one mapping per title
     couponsWithoutDuplicates = {}
-    for normalizedTitle, coupons in couponTitleMappingTmp.items():
+    for normalizedTitle, coupons in couponTitleMapping.items():
         couponsForDuplicateRemoval = []
         for coupon in coupons:
             if coupon.isEligibleForDuplicateRemoval():
