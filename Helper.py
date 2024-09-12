@@ -138,6 +138,8 @@ def shortenProductNames(couponTitle: str) -> str:
     couponTitle = re.sub(r"Im King Menü \(\+[^)]+\)", "", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r" mit ", "&", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Jr\s*\.", "Jr", couponTitle, flags=re.IGNORECASE)
+    # e.g. 0,5 l King Shake® Schoko, Erdbeer- oder Vanillegeschmack
+    couponTitle = re.sub(r"\s*Geschmack", "", couponTitle, flags=re.IGNORECASE)
     # Do some more basic replacements
     couponTitle = re.sub(r"\s+und\s+", ",", couponTitle, flags=re.IGNORECASE)
     couponTitle = couponTitle.replace(' ', '')
