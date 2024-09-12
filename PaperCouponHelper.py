@@ -19,12 +19,12 @@ def main() -> list:
             expireDates.add(expiredateStr)
             thankyouText = thankyouMap.get(expiredateStr)
             coupon = Coupon.wrap(paperc)
+            # Do some minor corrections
+            coupon.title = coupon.title.replace("*", "")
             coupon.id = paperc['uniqueID']  # Set custom uniqueID otherwise couchDB will create one later -> This is not what we want to happen!!
             price = paperc['price']
-            if price is not None:
-                price = price * 100
-                coupon.price = price
-            else:
+            if price == 0:
+                coupon.price = None
                 coupon.staticReducedPercent = 50
             expiredate = datetime.strptime(expiredateStr + " 23:59:59", '%d.%m.%Y %H:%M:%S').astimezone(getTimezone())
             coupon.timestampExpire = expiredate.timestamp()
