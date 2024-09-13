@@ -131,7 +131,7 @@ def shortenProductNames(couponTitle: str) -> str:
     couponTitle = re.sub(r"Onion[\s-]*Rings", "Rings", couponTitle, flags=re.IGNORECASE)
 
     """ Down below comes other bullshit they sometimes place into the subtitle fields. """
-    couponTitle = re.sub(r"\s*oder\s*", r"", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"\s*oder\s*", r",", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"\s*zum\s*Preis\s*von\s*(1!?|einem|einer)(\s*Portion)?", "", couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"^.{0,3}?Den Code zur Einlösung findest du im QR-Code.*", "", couponTitle, flags=re.IGNORECASE)
     # Remove e.g. "Im KING Menü (+ 50 Cent)"
