@@ -353,9 +353,8 @@ async def updatePublicChannel(bkbot, updateMode: ChannelUpdateMode):
         infoText += '\nFalls vorhanden, bitte die angepinnten Infos im Channel beachten.'
         infoText += '</b>'
         infoText += "\n---"
-    missingPaperCouponsText = bkbot.crawler.getMissingPaperCouponsText()
-    if missingPaperCouponsText is not None:
-        infoText += '\n<b>' + SYMBOLS.WARNING + 'Derzeit im Channel fehlende Papiercoupons:</b>' + missingPaperCouponsText
+    if bkbot.crawler.cachedMissingPaperCouponsText is not None:
+        infoText += f'\n<b>{SYMBOLS.WARNING}Derzeit im Channel fehlende Papiercoupons:</b>{bkbot.crawler.cachedMissingPaperCouponsText}'
     if notYetAvailableCouponsText is not None:
         infoText += '\n' + notYetAvailableCouponsText
         infoText += "\n---"
