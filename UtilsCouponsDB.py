@@ -311,13 +311,15 @@ class Coupon(Document):
         elif couponTitleContainsVeggieFood(self.getTitle()):
             # No result? Fallback to other, more unsafe methods.
             return True
-        else:
-            # Last resort: Check if tags contain any useful information.
-            if self.tags is not None:
-                for tag in self.tags:
-                    tag = tag.lower()
-                    if tag == 'sweetkings':
-                        return True
+        # Last resort: Check if tags contain any useful information.
+        if self.tags is not None:
+            for tag in self.tags:
+                tag = tag.lower()
+                if tag == 'sweetkings':
+                    return True
+        titlelower = self.title.lower()
+        if 'sundae' in titlelower:
+            return True
         # If in doubt, the product is not veggie
         return False
 

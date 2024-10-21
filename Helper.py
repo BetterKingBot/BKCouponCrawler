@@ -96,7 +96,7 @@ def shortenProductNames(couponTitle: str) -> str:
     """ Remove "KING" from some product titles """
     couponTitle = re.sub(r"(Bacon|Fish|Halloumi)\s*KING", r"\1", couponTitle, flags=re.IGNORECASE)
     """ E.g. "KING Shake" --> "Shake" """
-    couponTitle = re.sub(r"KING\s*(Jr\.?\s*Meal|Jr\.?\s*Menü|Shake|Nuggets?|Wings?|Onion[\s-]*Rings?)", r"\1", couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"KING\s*(Jr\.?\s*Meal|Jr\.?\s*Menü|Shake|Sundae|Nuggets?|Wings?|Onion[\s-]*Rings?)", r"\1", couponTitle, flags=re.IGNORECASE)
     """ 'Meta' replaces """
     # Normalize- and fix drink unit e.g. "0,3 L" or "0.3l" to "0.3" (remove unit character to save even more space)
     couponTitle = re.sub(r"(0[.,]\d{1,2})\s*L", r"\1", couponTitle, flags=re.IGNORECASE)
