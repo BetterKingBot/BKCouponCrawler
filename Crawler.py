@@ -442,17 +442,17 @@ class BKCrawler:
             expiredate = datetime.strptime(expiredateStr, '%Y-%m-%d %H:%M:%S').astimezone(getTimezone())
             coupon.timestampExpire = expiredate.timestamp()
             # Only add coupon if it is valid
-            if coupon.isValid():
+            if not coupon.isExpired():
                 validExtraCoupons[coupon.uniqueID] = coupon
         if len(validExtraCoupons) > 0:
             logging.info(f"Number of valid Payback coupons: {len(validExtraCoupons)}")
         # Now get paper coupons
         papercouponlist = PaperCouponHelper.getValidPaperCouponList()
-        if len(papercouponlist) > 0:
+        if papercouponlist is not None and len(papercouponlist) > 0:
             logging.info(f"Number of valid paper coupons: {len(papercouponlist)}")
-        # Add items to existing dict
-        for coupon in papercouponlist:
-            validExtraCoupons[coupon.id] = coupon
+            # Add items to existing dict
+            for coupon in papercouponlist:
+                validExtraCoupons[coupon.id] = coupon
         return validExtraCoupons
 
     def processCrawledCoupons(self, crawledCouponsDict: dict):

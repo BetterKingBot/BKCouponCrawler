@@ -230,7 +230,6 @@ Es gibt mehrere Möglichkeiten:
 - Versuche, die Kurz-Codes einfach anzusagen
 - Fahre durch den Drive hier werden idR. alle genommen
 - Falls deine BK Filiale die Vorbestellen Funktion bietet, scanne die Coupons im Bestellvorgang mit deinem Handy (Zweitgerät/Laptop benötigt)
-- Nimm statt BetterKing das unten verlinkte Würger King Projekt; es zeigt die Coupons so an wie die BK App
 
 Wo finde ich den Quellcode?
 Hier: github.com/coffeerhyder/BKCouponCrawler
@@ -243,8 +242,7 @@ Nein
 
 Gibt es sowas auch für McDonalds/KFC/...?
 McDonald's
-01. mccoupon.deals | Mcdonald's Coupons
-02. mcbroken.com | Wo funktioniert die Eismaschine?
+01. mcbroken.com | Wo funktioniert die Eismaschine?
 Sonstige
 01. billigepizza.netlify.app | Pizzapreise bei Domino's optimieren
 —> Video

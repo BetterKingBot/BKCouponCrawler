@@ -277,7 +277,9 @@ class Coupon(Document):
     def isValid(self) -> bool:
         """ If this returns true, we can present the coupon to the user.
          If this returns false, this usually means that the coupon is expired or not yet available. """
-        if self.isExpired() or self.isNotYetActive():
+        if self.isExpired():
+            return False
+        elif self.isNotYetActive():
             return False
         else:
             return True
