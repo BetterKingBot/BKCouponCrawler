@@ -192,7 +192,7 @@ class CouponCategory:
         elif self.expireDatetimeLowest == self.expireDatetimeHighest:
             return "Gültig bis " + formatDateGerman(self.expireDatetimeLowest)
         else:
-            return "Gültig bis min " + formatDateGerman(self.expireDatetimeLowest) + " max " + formatDateGerman(self.expireDatetimeHighest)
+            return "Gültig bis min " + formatDateGerman(self.expireDatetimeLowest)
 
     def getPriceInfoText(self) -> Union[str, None]:
         if self.getNumberofCouponsEatableWithPrice() == 0:

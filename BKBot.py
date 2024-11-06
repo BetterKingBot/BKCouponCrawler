@@ -667,8 +667,8 @@ class BKBot:
             menuText += '\n' + userFavoritesInfo.getUnavailableFavoritesText()
             if user.isAllowSendFavoritesNotification():
                 menuText += f"\n{SYMBOLS.CONFIRM}Du wirst benachrichtigt, sobald abgelaufene Favoriten wieder verfügbar sind."
-            else:
-                menuText += f'\n{SYMBOLS.INFORMATION}In den Einstellungen kannst du abgelaufene Favoriten löschen oder dich benachrichtigen lassen, sobald diese wieder verfügbar sind.'
+            if not user.settings.autoDeleteExpiredFavorites:
+                menuText += f'\n{SYMBOLS.INFORMATION}In den Einstellungen kannst du abgelaufene Favoriten löschen.'
         return userFavoritesInfo, menuText
 
     async def botDisplayEasterEgg(self, update: Update, context: CallbackContext):
@@ -1178,7 +1178,7 @@ class BKBot:
     async def botDeleteUnavailableFavoriteCoupons(self, update: Update, context: CallbackContext):
         """ Removes all user selected favorites which are unavailable/expired at this moment. """
         user = await self.getUser(userID=update.effective_user.id)
-        await self.deleteUsersUnavailableFavorites([user])
+        await self.deleteUsersUnavailableFavorites([user], force=True)
         await self.displaySettings(update, context, user)
         return CallbackVars.MENU_SETTINGS
 
@@ -1344,8 +1344,10 @@ class BKBot:
                     user.deleteFavoriteCouponID(unavailableCoupon.id)
                 dbUpdates.append(user)
         logging.info('Deleting expired favorites of ' + str(len(dbUpdates)) + ' users')
-        if len(dbUpdates) > 0:
-            self.userdb.update(dbUpdates)
+        if len(dbUpdates) == 0:
+            # Nothing to do
+            return
+        self.userdb.update(dbUpdates)
 
     def getNewCouponsTextWithChannelHyperlinks(self, couponsDict: dict, maxNewCouponsToLink: int) -> str:
         infoText = ''
