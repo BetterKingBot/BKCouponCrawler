@@ -770,7 +770,7 @@ class BKCrawler:
         paperCouponMapping = {}
         for couponID in couponDB:
             coupon = Coupon.load(id=couponID, db=couponDB)
-            if coupon.type == CouponType.PAPER:
+            if coupon.type == CouponType.PAPER and coupon.isValid():
                 clist = paperCouponMapping.setdefault(coupon.getExpireDateFormatted(), [])
                 clist.append(coupon)
         self.cachedMissingPaperCouponsText = None
