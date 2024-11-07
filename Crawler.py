@@ -755,7 +755,7 @@ class BKCrawler:
         self.updateCachedMissingPaperCouponsInfo(couponDB=couponDB)
         if len(self.cachedFutureCoupons) > 0:
             # Sort coupons by "release date"
-            self.cachedFutureCouponsText = f"<b>{SYMBOLS.WHITE_DOWN_POINTING_BACKHAND}Demnächst verfügbare Coupons{SYMBOLS.WHITE_DOWN_POINTING_BACKHAND}</b>"
+            self.cachedFutureCouponsText = f"<b>{SYMBOLS.WHITE_DOWN_POINTING_BACKHAND}{len(self.cachedFutureCoupons)} Demnächst verfügbare Coupons{SYMBOLS.WHITE_DOWN_POINTING_BACKHAND}</b>"
             for futureCoupon in self.cachedFutureCoupons:
                 datetimeCouponAvailable = futureCoupon.getStartDatetime()
                 if datetimeCouponAvailable is not None:

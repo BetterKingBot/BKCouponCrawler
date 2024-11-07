@@ -28,10 +28,10 @@ def main() -> List[Coupon]:
 
     # Liste für alle JSON-Dateien im Ordner
     json_files = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith('.json')]
-    validcoupons = []
+    allresults = []
     if len(json_files) == 0:
         print("Found zero paper coupon json sources")
-        return validcoupons
+        return allresults
 
     for json_file in json_files:
         index = 0
@@ -67,7 +67,7 @@ def main() -> List[Coupon]:
                 # Only add coupon if it is valid
                 if coupon.isExpired():
                     continue
-                validcoupons.append(coupon)
+                allresults.append(coupon)
                 index += 1
             # Log inconsistent stuff
             if len(expireDates) != 1:
@@ -78,7 +78,19 @@ def main() -> List[Coupon]:
             traceback.print_exc()
             print(f"Fehler beim Laden oder Verarbeiten der Papiercoupons {json_file} | Index {index}")
             continue
-    return validcoupons
+    """ Sort items and add each unique ID only once. Prefer the coupons that expire next.
+     BK does sometimes prolong the expire date of a coupon so the same number can be in that list twice -> We want the currently valid one only.
+     """
+    allresults = sorted(allresults,
+                        key=lambda x: 0 if x.timestampExpire is None else x.timestampExpire)
+    coupon_ids = []
+    finalResults = []
+    for coupon in allresults:
+        if coupon.id in coupon_ids:
+            print(f"Skipped duplicated paper coupon: {coupon.id}")
+            continue
+        finalResults.append(coupon)
+    return finalResults
 
 
 if __name__ == "__main__":
