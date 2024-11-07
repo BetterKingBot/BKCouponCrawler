@@ -442,17 +442,17 @@ class BKCrawler:
             expiredate = datetime.strptime(expiredateStr, '%Y-%m-%d %H:%M:%S').astimezone(getTimezone())
             coupon.timestampExpire = expiredate.timestamp()
             # Only add coupon if it is valid
-            if coupon.isValid():
+            if not coupon.isExpired():
                 validExtraCoupons[coupon.uniqueID] = coupon
         if len(validExtraCoupons) > 0:
             logging.info(f"Number of valid Payback coupons: {len(validExtraCoupons)}")
         # Now get paper coupons
         papercouponlist = PaperCouponHelper.getValidPaperCouponList()
-        if len(papercouponlist) > 0:
+        if papercouponlist is not None and len(papercouponlist) > 0:
             logging.info(f"Number of valid paper coupons: {len(papercouponlist)}")
-        # Add items to existing dict
-        for coupon in papercouponlist:
-            validExtraCoupons[coupon.id] = coupon
+            # Add items to existing dict
+            for coupon in papercouponlist:
+                validExtraCoupons[coupon.id] = coupon
         return validExtraCoupons
 
     def processCrawledCoupons(self, crawledCouponsDict: dict):
@@ -755,7 +755,7 @@ class BKCrawler:
         self.updateCachedMissingPaperCouponsInfo(couponDB=couponDB)
         if len(self.cachedFutureCoupons) > 0:
             # Sort coupons by "release date"
-            self.cachedFutureCouponsText = f"<b>{SYMBOLS.WHITE_DOWN_POINTING_BACKHAND}Demnächst verfügbare Coupons{SYMBOLS.WHITE_DOWN_POINTING_BACKHAND}</b>"
+            self.cachedFutureCouponsText = f"<b>{SYMBOLS.WHITE_DOWN_POINTING_BACKHAND}{len(self.cachedFutureCoupons)} Demnächst verfügbare Coupons{SYMBOLS.WHITE_DOWN_POINTING_BACKHAND}</b>"
             for futureCoupon in self.cachedFutureCoupons:
                 datetimeCouponAvailable = futureCoupon.getStartDatetime()
                 if datetimeCouponAvailable is not None:
@@ -770,7 +770,7 @@ class BKCrawler:
         paperCouponMapping = {}
         for couponID in couponDB:
             coupon = Coupon.load(id=couponID, db=couponDB)
-            if coupon.type == CouponType.PAPER:
+            if coupon.type == CouponType.PAPER and coupon.isValid():
                 clist = paperCouponMapping.setdefault(coupon.getExpireDateFormatted(), [])
                 clist.append(coupon)
         self.cachedMissingPaperCouponsText = None

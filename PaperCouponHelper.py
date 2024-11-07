@@ -1,4 +1,7 @@
+import os
+import traceback
 from datetime import datetime
+from typing import List
 
 import Helper
 from Helper import getTimezone, loadJson
@@ -8,41 +11,86 @@ from UtilsCouponsDB import Coupon
 """ Helper for adding paper coupons to the coupon system. """
 
 
-def main() -> list:
-    thankyouMap = {"8.11.2024": "Danke an die MyDealz User DerShitstorm und rote_rakete: mydealz.de/deals/burger-king-coupons-gultig-vom-sa-07092024-bis-fr-08112024-2418876#reply-49124677"}
-    try:
-        papercs = loadJson("paper_coupon_data/coupons.json")
-        validcoupons = []
-        expireDates = set()
-        for paperc in papercs:
-            expiredateStr = paperc['expireDate']
-            expireDates.add(expiredateStr)
-            thankyouText = thankyouMap.get(expiredateStr)
-            coupon = Coupon.wrap(paperc)
-            # Do some minor corrections
-            coupon.title = coupon.title.replace("*", "")
-            coupon.id = paperc['uniqueID']  # Set custom uniqueID otherwise couchDB will create one later -> This is not what we want to happen!!
-            price = paperc['price']
-            if price == 0:
-                coupon.price = None
-                coupon.staticReducedPercent = 50
-            expiredate = datetime.strptime(expiredateStr + " 23:59:59", '%d.%m.%Y %H:%M:%S').astimezone(getTimezone())
-            coupon.timestampExpire = expiredate.timestamp()
-            coupon.type = Helper.CouponType.PAPER
-            if thankyouText is not None:
-                coupon.description = thankyouText
-            # Only add coupon if it is valid
-            if coupon.isValid():
-                validcoupons.append(coupon)
-        # Log inconsistent stuff
-        if len(expireDates) != 1:
-            print(f"Warnung: Ungleiche Ablaufdaten entdeckt! {expireDates}")
-        if len(papercs) != 48:
-            print(f"Warnung | Erwartete Anzahl Papiercoupons: 48 | Gefunden: {len(papercs)}")
-        return validcoupons
-    except:
-        print("Fehler beim Laden oder Verarbeiten der Papiercoupons")
-        return []
+def main() -> List[Coupon]:
+    extrainfomap = {
+        "08.11.2024": {
+            "thx": "Danke an die MyDealz User DerShitstorm und rote_rakete: mydealz.de/deals/burger-king-coupons-gultig-vom-sa-07092024-bis-fr-08112024-2418876#reply-49124677",
+            "start_date": "07.09.2024"
+        },
+        "31.12.2024": {
+            "thx": "Danke an den MyDealz User BubbleBobble: mydealz.de/deals/burger-king-coupons-gultig-vom-sa-09112024-bis-fr-10012025-2452049",
+            "start_date": "09.11.2024"
+        }
+    }
+
+    # Pfad zum Ordner "paper_coupon_data"
+    folder_path = 'paper_coupon_data'
+
+    # Liste für alle JSON-Dateien im Ordner
+    json_files = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith('.json')]
+    allresults = []
+    if len(json_files) == 0:
+        print("Found zero paper coupon json sources")
+        return allresults
+
+    for json_file in json_files:
+        index = 0
+        try:
+            papercs = loadJson(json_file)
+            expireDates = set()
+            for paperc in papercs:
+                expiredateStr = paperc['expireDate']
+                expireDates.add(expiredateStr)
+                extrainfo = extrainfomap.get(expiredateStr)
+                start_dateStr = extrainfo['start_date'] if extrainfo is not None else None
+                thankyouText = extrainfo['thx'] if extrainfo is not None else None
+                coupon = Coupon.wrap(paperc)
+                # Do some minor corrections
+                coupon.title = coupon.title.replace("*", "")
+                coupon.id = paperc['uniqueID']  # Set custom uniqueID otherwise couchDB will create one later -> This is not what we want to happen!!
+                price = paperc['price']
+                if price == 0:
+                    coupon.price = None
+                    coupon.staticReducedPercent = 50
+                if start_dateStr is not None:
+                    startdate = datetime.strptime(start_dateStr, '%d.%m.%Y').astimezone(getTimezone())
+                    coupon.timestampStart = startdate.timestamp()
+                else:
+                    print(f"DEV U FORGOT TO ADD START_DATE FOR {expiredateStr}")
+                expiredate = datetime.strptime(expiredateStr + " 23:59:59", '%d.%m.%Y %H:%M:%S').astimezone(getTimezone())
+                coupon.timestampExpire = expiredate.timestamp()
+                coupon.type = Helper.CouponType.PAPER
+                if thankyouText is not None:
+                    coupon.description = thankyouText
+                else:
+                    print(f"DEV U FORGOT PAPER THANK YOU FOR {expiredateStr}")
+                # Only add coupon if it is valid
+                if coupon.isExpired():
+                    continue
+                allresults.append(coupon)
+                index += 1
+            # Log inconsistent stuff
+            if len(expireDates) != 1:
+                print(f"Warnung: Ungleiche Ablaufdaten entdeckt! {expireDates}")
+            if len(papercs) != 48:
+                print(f"Warnung | Erwartete Anzahl Papiercoupons: 48 | Gefunden: {len(papercs)}")
+        except:
+            traceback.print_exc()
+            print(f"Fehler beim Laden oder Verarbeiten der Papiercoupons {json_file} | Index {index}")
+            continue
+    """ Sort items and add each unique ID only once. Prefer the coupons that expire next.
+     BK does sometimes prolong the expire date of a coupon so the same number can be in that list twice -> We want the currently valid one only.
+     """
+    allresults = sorted(allresults,
+                        key=lambda x: 0 if x.timestampExpire is None else x.timestampExpire)
+    coupon_ids = []
+    finalResults = []
+    for coupon in allresults:
+        if coupon.id in coupon_ids:
+            print(f"Skipped duplicated paper coupon: {coupon.id}")
+            continue
+        finalResults.append(coupon)
+    return finalResults
 
 
 if __name__ == "__main__":
@@ -54,8 +102,8 @@ def getValidPaperCouponList() -> list:
 
 
 def getValidPaperCouponDict() -> dict:
-    list = main()
     couponDict = {}
+    list = main()
     for coupon in list:
         couponDict[coupon.id] = coupon
     return couponDict

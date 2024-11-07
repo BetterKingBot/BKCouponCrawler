@@ -277,7 +277,9 @@ class Coupon(Document):
     def isValid(self) -> bool:
         """ If this returns true, we can present the coupon to the user.
          If this returns false, this usually means that the coupon is expired or not yet available. """
-        if self.isExpired() or self.isNotYetActive():
+        if self.isExpired():
+            return False
+        elif self.isNotYetActive():
             return False
         else:
             return True
@@ -311,13 +313,15 @@ class Coupon(Document):
         elif couponTitleContainsVeggieFood(self.getTitle()):
             # No result? Fallback to other, more unsafe methods.
             return True
-        else:
-            # Last resort: Check if tags contain any useful information.
-            if self.tags is not None:
-                for tag in self.tags:
-                    tag = tag.lower()
-                    if tag == 'sweetkings':
-                        return True
+        # Last resort: Check if tags contain any useful information.
+        if self.tags is not None:
+            for tag in self.tags:
+                tag = tag.lower()
+                if tag == 'sweetkings':
+                    return True
+        titlelower = self.title.lower()
+        if 'sundae' in titlelower:
+            return True
         # If in doubt, the product is not veggie
         return False
 
