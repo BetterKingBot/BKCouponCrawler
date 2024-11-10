@@ -1415,7 +1415,7 @@ class BKBot:
     async def batchProcess(self):
         """ Runs all processes which should only run once per day. """
         logging.info('Running batch process...')
-        self.crawl()
+        await self.crawl()
         # infoDB = self.crawler.getInfoDB()
         # infoDBDoc = InfoEntry.load(infoDB, DATABASES.INFO_DB)
         # lastSuccessfulChannelupdate = infoDBDoc.dateLastSuccessfulChannelUpdate
@@ -1443,9 +1443,9 @@ class BKBot:
         await self.cleanupCaches()
         logging.info('Batch process done.')
 
-    def crawl(self) -> bool:
+    async def crawl(self) -> bool:
         try:
-            self.crawler.crawlAndProcessData()
+            await self.crawler.crawlAndProcessData()
             return True
         except:
             traceback.print_exc()
@@ -1845,9 +1845,9 @@ async def notificationRoutine(bkbot):
 def main():
     bkbot: BKBot = BKBot()
     # Check for start-args to be executed immediately
-    if bkbot.args.crawl:
-        bkbot.crawl()
     loop = asyncio.get_event_loop()
+    if bkbot.args.crawl:
+        loop.create_task(bkbot.crawl())
     # Check for start args for stuff that can be executed in async way
     if bkbot.args.forcechannelupdatewithresend:
         loop.create_task(bkbot.renewPublicChannel())

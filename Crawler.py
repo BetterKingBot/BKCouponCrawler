@@ -1,3 +1,4 @@
+import asyncio
 import csv
 import logging
 import traceback
@@ -71,6 +72,7 @@ class BKCrawler:
         self.cfg = loadConfig()
         if self.cfg is None:
             raise Exception('Broken or missing config')
+        loop = asyncio.get_event_loop()
         # Init DB
         self.couchdb = couchdb.Server(self.cfg.db_url)
         self.cachedAvailableCouponCategories = {}
@@ -119,6 +121,7 @@ class BKCrawler:
         if DATABASES.TELEGRAM_CHANNEL not in self.couchdb:
             logging.info("Creating missing DB: " + DATABASES.TELEGRAM_CHANNEL)
             self.couchdb.create(DATABASES.TELEGRAM_CHANNEL)
+        self.browser = httpx.AsyncClient()
         # Test 2022-06-05 to find invalid datasets
         # userDB = self.couchdb[DATABASES.TELEGRAM_USERS]
         # if os.path.exists('telegram_users.json'):
@@ -153,7 +156,7 @@ class BKCrawler:
         # Do this here so manually added coupons will get added on application start without extra crawl process
         self.migrateDBs()
         if allowAddExtraCouponsOnStartup:
-            self.addExtraCoupons(crawledCouponsDict={}, immediatelyAddToDB=True)
+            loop.create_task(self.addExtraCoupons(crawledCouponsDict={}, immediatelyAddToDB=True))
         # Make sure that our cache gets filled on init
         couponDB = self.getCouponDB()
         self.updateCaches(couponDB)
@@ -177,15 +180,15 @@ class BKCrawler:
         """ If enabled, CSV file(s) will be exported into the "crawler" folder on each full crawl run. """
         self.exportCSVs = exportCSVs
 
-    def crawl(self):
+    async def crawl(self):
         """ Updates DB with new coupons & offers. """
         crawledCouponsDict = {}
-        self.crawlCoupons(crawledCouponsDict)
-        self.addExtraCoupons(crawledCouponsDict=crawledCouponsDict, immediatelyAddToDB=False)
+        await self.crawlCoupons(crawledCouponsDict)
+        await self.addExtraCoupons(crawledCouponsDict=crawledCouponsDict, immediatelyAddToDB=False)
         self.processCrawledCoupons(crawledCouponsDict)
         # self.crawlProducts()
 
-    def downloadProductiveCouponDBImagesAndCreateQRCodes(self):
+    async def downloadProductiveCouponDBImagesAndCreateQRCodes(self):
         """ Downloads coupons images and generates QR codes for current productive coupon DB. """
         dateStart = datetime.now()
         couponDB = self.getCouponDB()
@@ -198,7 +201,7 @@ class BKCrawler:
         # Step 2: Download coupon images
         numberofDownloadedImages = 0
         for coupon in coupons:
-            if downloadCouponImageIfNonExistant(coupon):
+            if await self.downloadImageIfNonExistant(coupon):
                 numberofDownloadedImages += 1
         logging.info(f"Number of coupon images downloaded: {numberofDownloadedImages} | Duration: {datetime.now() - dateStart}")
 
@@ -227,29 +230,29 @@ class BKCrawler:
         # timestamp migration/introduction 2022-07-20
         return
 
-    def crawlAndProcessData(self):
+    async def crawlAndProcessData(self):
         """ One function that does it all! Execute this every time you run the crawler. """
         try:
             timestampStart = datetime.now().timestamp()
-            self.crawl()
+            await self.crawl()
             if self.exportCSVs:
                 self.couponCsvExport()
                 self.couponCsvExport2()
-            self.downloadProductiveCouponDBImagesAndCreateQRCodes()
+            await self.downloadProductiveCouponDBImagesAndCreateQRCodes()
             # self.checkProductiveCouponsDBImagesIntegrity()
             # self.checkProductiveOffersDBImagesIntegrity()
             logging.info("Total crawl duration: " + getFormattedPassedTime(timestampStart))
         finally:
             self.updateCaches(couponDB=self.getCouponDB(), offerDB=self.getOfferDB())
 
-    def crawlCoupons(self, crawledCouponsDict: dict):
+    async def crawlCoupons(self, crawledCouponsDict: dict):
         """ Crawls coupons from App API.
          """
         timestampCrawlStart = datetime.now().timestamp()
         # Docs: https://czqk28jt.apicdn.sanity.io/v1/graphql/prod_bk_de/default
         # Official live instance: https://www.burgerking.de/rewards/offers
         # Old one: https://euc1-prod-bk.rbictg.com/graphql
-        req = httpx.get(
+        req = await self.browser.get(
             url='https://czqk28jt.apicdn.sanity.io/v1/graphql/prod_bk_de/default?operationName=featureSortedLoyaltyOffers&variables=%7B%22id%22%3A%22feature-loyalty-offers-ui-singleton%22%7D&query=query+featureSortedLoyaltyOffers%28%24id%3AID%21%29%7BLoyaltyOffersUI%28id%3A%24id%29%7B_id+sortedSystemwideOffers%7B...SystemwideOffersFragment+__typename%7D__typename%7D%7Dfragment+SystemwideOffersFragment+on+SystemwideOffer%7B_id+_type+loyaltyEngineId+name%7BlocaleRaw%3AdeRaw+__typename%7Ddescription%7BlocaleRaw%3AdeRaw+__typename%7DmoreInfo%7BlocaleRaw%3AdeRaw+__typename%7DhowToRedeem%7BenRaw+__typename%7DbackgroundImage%7B...MenuImageFragment+__typename%7DshortCode+mobileOrderOnly+redemptionMethod+daypart+redemptionType+upsellOptions%7B_id+loyaltyEngineId+description%7BlocaleRaw%3AdeRaw+__typename%7DlocalizedImage%7Blocale%3Ade%7B...MenuImagesFragment+__typename%7D__typename%7Dname%7BlocaleRaw%3AdeRaw+__typename%7D__typename%7DofferPrice+marketPrice%7B...on+Item%7B_id+_type+vendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7D...on+Combo%7B_id+_type+vendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7D__typename%7DlocalizedImage%7Blocale%3Ade%7B...MenuImagesFragment+__typename%7D__typename%7DuiPattern+lockedOffersPanel%7BcompletedChallengeHeader%7BlocaleRaw%3AdeRaw+__typename%7DcompletedChallengeDescription%7BlocaleRaw%3AdeRaw+__typename%7D__typename%7DpromoCodePanel%7BpromoCodeDescription%7BlocaleRaw%3AdeRaw+__typename%7DpromoCodeLabel%7BlocaleRaw%3AdeRaw+__typename%7DpromoCodeLink+__typename%7Dincentives%7B__typename+...on+Combo%7B_id+_type+mainItem%7B_id+_type+operationalItem%7Bdaypart+__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7DisOfferBenefit+__typename%7D...on+Item%7B_id+_type+operationalItem%7Bdaypart+__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7D...on+Picker%7B_id+_type+options%7Boption%7B__typename+...on+Combo%7B_id+_type+mainItem%7B_id+_type+operationalItem%7Bdaypart+__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7D...on+Item%7B_id+_type+operationalItem%7Bdaypart+__typename%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7D__typename%7D%7D__typename%7DisOfferBenefit+__typename%7D...on+OfferDiscount%7B_id+_type+discountValue+discountType+__typename%7D...on+OfferActivation%7B_id+_type+__typename%7D...on+SwapMapping%7B_type+__typename%7D%7DvendorConfigs%7B...VendorConfigsFragment+__typename%7Drules%7B...on+RequiresAuthentication%7BrequiresAuthentication+__typename%7D...on+LoyaltyBetweenDates%7BstartDate+endDate+__typename%7D__typename%7D__typename%7Dfragment+MenuImageFragment+on+Image%7Bhotspot%7Bx+y+height+width+__typename%7Dcrop%7Btop+bottom+left+right+__typename%7Dasset%7Bmetadata%7Blqip+palette%7Bdominant%7Bbackground+foreground+__typename%7D__typename%7D__typename%7D_id+__typename%7D__typename%7Dfragment+MenuImagesFragment+on+Images%7Bapp%7B...MenuImageFragment+__typename%7Dkiosk%7B...MenuImageFragment+__typename%7DimageDescription+__typename%7Dfragment+VendorConfigsFragment+on+VendorConfigs%7Bcarrols%7B...VendorConfigFragment+__typename%7DcarrolsDelivery%7B...VendorConfigFragment+__typename%7Dncr%7B...VendorConfigFragment+__typename%7DncrDelivery%7B...VendorConfigFragment+__typename%7Doheics%7B...VendorConfigFragment+__typename%7DoheicsDelivery%7B...VendorConfigFragment+__typename%7Dpartner%7B...VendorConfigFragment+__typename%7DpartnerDelivery%7B...VendorConfigFragment+__typename%7DproductNumber%7B...VendorConfigFragment+__typename%7DproductNumberDelivery%7B...VendorConfigFragment+__typename%7Dsicom%7B...VendorConfigFragment+__typename%7DsicomDelivery%7B...VendorConfigFragment+__typename%7Dqdi%7B...VendorConfigFragment+__typename%7DqdiDelivery%7B...VendorConfigFragment+__typename%7Dqst%7B...VendorConfigFragment+__typename%7DqstDelivery%7B...VendorConfigFragment+__typename%7Drpos%7B...VendorConfigFragment+__typename%7DrposDelivery%7B...VendorConfigFragment+__typename%7DsimplyDelivery%7B...VendorConfigFragment+__typename%7DsimplyDeliveryDelivery%7B...VendorConfigFragment+__typename%7Dtablet%7B...VendorConfigFragment+__typename%7DtabletDelivery%7B...VendorConfigFragment+__typename%7D__typename%7Dfragment+VendorConfigFragment+on+VendorConfig%7BpluType+parentSanityId+pullUpLevels+constantPlu+discountPlu+quantityBasedPlu%7Bquantity+plu+qualifier+__typename%7DmultiConstantPlus%7Bquantity+plu+qualifier+__typename%7DparentChildPlu%7Bplu+childPlu+__typename%7DsizeBasedPlu%7BcomboPlu+comboSize+__typename%7D__typename%7D',
             headers=HEADERS, timeout=120)
         logging.debug(req.text)
@@ -417,7 +420,7 @@ class BKCrawler:
             logging.info(getLogSeparatorString())
         logging.info(f'Total coupons crawl time: {getFormattedPassedTime(timestampCrawlStart)}')
 
-    def addExtraCoupons(self, crawledCouponsDict: dict, immediatelyAddToDB: bool):
+    async def addExtraCoupons(self, crawledCouponsDict: dict, immediatelyAddToDB: bool):
         """ Adds extra coupons which have been manually added to config_extra_coupons.json and paper coupons.
          This will only add VALID coupons to DB! """
         extraCouponsToAdd = self.getValidExtraCoupons()
@@ -427,7 +430,7 @@ class BKCrawler:
             dbWasUpdated = self.addCouponsToDB(couponDB=couponDB, couponsToAddToDB=extraCouponsToAdd)
             if dbWasUpdated:
                 # Important!
-                self.downloadProductiveCouponDBImagesAndCreateQRCodes()
+                await self.downloadProductiveCouponDBImagesAndCreateQRCodes()
         for coupon in extraCouponsToAdd.values():
             crawledCouponsDict[coupon.uniqueID] = coupon
 
@@ -461,8 +464,18 @@ class BKCrawler:
         """ Now tag original price values for 'duplicated' coupons: If we got two coupons containing the same product but we only found the original price for one of them,
          we can set this on the other one(s) too. """
         # Sanitize crawled data
+        paperCouponIDs = set()
+        appCouponIDs = set()
         for coupon in crawledCouponsDict.values():
             coupon.title = sanitizeCouponTitle(coupon.title)
+            if coupon.type == CouponType.PAPER:
+                paperCouponIDs.add(coupon.id)
+            elif coupon.type == CouponType.APP:
+                appCouponIDs.add(coupon.id)
+        for paperCouponID in paperCouponIDs:
+            if paperCouponID in appCouponIDs:
+                print(f"Paper coupon id == app coupon ID: {paperCouponID}")
+
         couponTitleMapping = getCouponTitleMapping(crawledCouponsDict)
         numberofItemsWithoutImage = 0
         for couponsContainingSameProducts in couponTitleMapping.values():
@@ -515,8 +528,8 @@ class BKCrawler:
                 logging.info(f'{coupon}')
             logging.info(getLogSeparatorString())
         logging.info(f'Crawled coupons: {len(crawledCouponsDict)} | To be added to DB: {len(couponsToAddToDB)}')
-        logging.info(f"Number of coupons without images: {numberofItemsWithoutImage}")
-        logging.info(f"Number of duplicated coupons: {len(crawledCouponsDict) - len(couponTitleMapping)}")
+        numberofDuplicatedCoupons = len(crawledCouponsDict) - len(couponTitleMapping)
+        logging.info(f"Coupons without images: {numberofItemsWithoutImage} | Duplicated coupons: {numberofDuplicatedCoupons}")
         infoDatabase = self.getInfoDB()
         infoDBDoc = InfoEntry.load(infoDatabase, DATABASES.INFO_DB)
         couponDB = self.getCouponDB()
@@ -981,6 +994,32 @@ class BKCrawler:
                 offers.append(offer)
         return offers
 
+    async def downloadImageIfNonExistant(self, coupon: Coupon) -> bool:
+        url = coupon.imageURL
+        path = coupon.getImagePath()
+        if url is None or path is None:
+            return False
+        elif os.path.exists(path):
+            # Image already exists
+            return False
+        try:
+            logging.info('Downloading image to: ' + path)
+            response = await self.browser.get(url, follow_redirects=True)
+            with open(path, mode='wb') as file:
+                file.write(response.content)
+
+            # Check for broken image and delete it if broken
+            # TODO: Solve this in a more elegant way so we do not even write/store broken image files in the first place(?!).
+            if isValidImageFile(path):
+                return True
+            else:
+                logging.warning("Image is broken: Deleting broken image: " + path)
+                os.remove(path)
+                return False
+        except Exception as e:
+            logging.warning(f"Image download failed: {url} - {str(e)}")
+            return False
+
 
 def getCouponByID(coupons: List[Coupon], couponID: str) -> Union[Coupon, None]:
     """ Returns first coupon with desired ID in list. """
@@ -1003,34 +1042,6 @@ def hasChanged(originalData, newData, ignoreKeys=None) -> bool:
         elif newValue != originalData[key]:
             return True
     return False
-
-
-def downloadCouponImageIfNonExistant(coupon: Coupon) -> bool:
-    return downloadImageIfNonExistant(coupon.imageURL, coupon.getImagePath())
-
-
-def downloadImageIfNonExistant(url: str, path: str) -> bool:
-    if url is None or path is None:
-        return False
-    elif os.path.exists(path):
-        # Image already exists
-        return False
-    try:
-        logging.info('Downloading image to: ' + path)
-        r = requests.get(url, allow_redirects=True)
-        open(path, mode='wb').write(r.content)
-        # Check for broken image and delete it if broken
-        # TODO: Solve this in a more elegant way so we do not even write/store broken image files in the first place(?!)
-        if isValidImageFile(path):
-            return True
-        else:
-            logging.warning("Image is broken: Deleting broken image: " + path)
-            os.remove(path)
-            return False
-    except:
-        traceback.print_exc()
-        logging.warning("Image download failed: " + url)
-        return False
 
 
 def generateQRImageIfNonExistant(qrCodeData: str, path: str) -> bool:
@@ -1062,5 +1073,5 @@ if __name__ == '__main__':
     # crawler.setExportCSVs(True)
     # crawler.setCrawlOnlyBotCompatibleCoupons(False)
     print("Number of userIDs in DB: " + str(len(crawler.getUserDB())))
-    crawler.crawlAndProcessData()
+    asyncio.run(crawler.crawlAndProcessData())
     print("Crawler done!")

@@ -84,11 +84,18 @@ def main() -> List[Coupon]:
     allresults = sorted(allresults,
                         key=lambda x: 0 if x.timestampExpire is None else x.timestampExpire)
     coupon_ids = []
+    coupon_plus = []
     finalResults = []
+    """ Detect duplicates, log them and ignore them. """
     for coupon in allresults:
         if coupon.id in coupon_ids:
-            print(f"Skipped duplicated paper coupon: {coupon.id}")
+            print(f"Skipped duplicated paper coupon via ID: {coupon.id}")
             continue
+        elif coupon.plu in coupon_plus:
+            print(f"Skipped duplicated paper coupon via PLU: {coupon.id} | PLU {coupon.plu}")
+            continue
+        coupon_ids.append(coupon.id)
+        coupon_plus.append(coupon.plu)
         finalResults.append(coupon)
     return finalResults
 
@@ -103,7 +110,7 @@ def getValidPaperCouponList() -> list:
 
 def getValidPaperCouponDict() -> dict:
     couponDict = {}
-    list = main()
-    for coupon in list:
+    resultlist = main()
+    for coupon in resultlist:
         couponDict[coupon.id] = coupon
     return couponDict

@@ -1,338 +1,338 @@
 [
   {
-    "title": "Whopper + 0,4l Coca Cola",
+    "title": "6 Onion Rings + Bacon King + Extra Crispy King",
     "expireDate": "31.12.2024",
-    "uniqueID": "35409",
-    "plu": "952",
-    "price": 1299
-  },
-  {
-    "title": "Whopper Jr. + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35396",
-    "plu": "911",
-    "price": 699
-  },
-  {
-    "title": "Plant-based Nuggets + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35399",
-    "plu": "948",
-    "price": 289
-  },
-  {
-    "title": "Whopper + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35400",
-    "plu": "915",
-    "price": 799
-  },
-  {
-    "title": "Plant-based Whopper + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35402",
-    "plu": "949",
-    "price": 789
-  },
-  {
-    "title": "Whopper Jr. + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35403",
-    "plu": "910",
-    "price": 299
-  },
-  {
-    "title": "Plant-based Tortilla + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35404",
-    "plu": "989",
-    "price": 999
-  },
-  {
-    "title": "King Nuggets Crispy Chicken + King Fries + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35411",
-    "plu": "972",
-    "price": 899
-  },
-  {
-    "title": "Plant-based Long Chicken + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35422",
-    "plu": "942",
-    "price": 799
-  },
-  {
-    "title": "Crispy Chicken",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35429",
-    "plu": "918",
-    "price": 399
-  },
-  {
-    "title": "Plant-based Long Chicken + King Fries + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35423",
-    "plu": "945",
-    "price": 999
-  },
-  {
-    "title": "Big King XXL + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35470",
-    "plu": "970",
-    "price": 999
-  },
-  {
-    "title": "Plant-based Nuggets Chili Cheese + King Fries + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35425",
-    "plu": "946",
-    "price": 1099
-  },
-  {
-    "title": "Big King",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35475",
-    "plu": "919",
-    "price": 399
-  },
-  {
-    "title": "Plant-based Cheeseburger + Plant-based Chili Cheese",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35426",
-    "plu": "947",
-    "price": 499
-  },
-  {
-    "title": "King Nuggets + King Fries + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35476",
-    "plu": "971",
-    "price": 999
-  },
-  {
-    "title": "Onion Rings",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35090",
-    "plu": "909",
-    "price": 149
-  },
-  {
-    "title": "Long Chicken",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35478",
-    "plu": "920",
-    "price": 399
-  },
-  {
-    "title": "2 Cheeseburger + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35481",
-    "plu": "912",
-    "price": 499
-  },
-  {
-    "title": "2 Chili Cheese Burger + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35482",
-    "plu": "914",
-    "price": 499
-  },
-  {
-    "title": "Chili Cheese Burger + Big King XXL + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35483",
-    "plu": "960",
-    "price": 1299
-  },
-  {
-    "title": "Chili Cheese Burger + Crispy Chicken + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35428",
-    "plu": "959",
-    "price": 799
-  },
-  {
-    "title": "King Nuggets Double Cheeseburger + King Fries + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35430",
-    "plu": "928",
-    "price": 899
-  },
-  {
-    "title": "Golden Wings + Double Chili Cheese Burger + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35437",
-    "plu": "925",
-    "price": 799
-  },
-  {
-    "title": "Golden Wings + Bacon King + 0,4l Coca Cola",
-    "expireDate": "31.12.2024",
-    "uniqueID": "35450",
+    "uniqueID": "34506",
     "plu": "956",
     "price": 1299
   },
   {
-    "title": "Chili Cheese Burger + Bacon King + Golden King Pommes + 0,4l Coca Cola",
+    "title": "Chili Cheese Burger + Bacon King + Extra King Pommes",
     "expireDate": "31.12.2024",
-    "uniqueID": "35441",
+    "uniqueID": "34541",
     "plu": "955",
     "price": 1399
   },
   {
-    "title": "Big King + 0,4l Coca Cola",
+    "title": "2 mittlere King Pommes zum Preis von einer Portion",
     "expireDate": "31.12.2024",
-    "uniqueID": "35438",
-    "plu": "949",
+    "uniqueID": "25954",
+    "plu": "900",
+    "price": 0
+  },
+  {
+    "title": "2 Big King + Extra Large Cola",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34528",
+    "plu": "940",
     "price": 1099
   },
   {
-    "title": "5 Crispy Chicken + 0,4l Coca Cola",
+    "title": "2 Crispy Chicken + Extra Large Cola",
     "expireDate": "31.12.2024",
     "uniqueID": "35001",
     "plu": "929",
     "price": 999
   },
   {
-    "title": "Long Chicken + Golden King Pommes + 0,4l Coca Cola",
+    "title": "6 King Nuggets",
     "expireDate": "31.12.2024",
-    "uniqueID": "35429",
+    "uniqueID": "23378",
+    "plu": "901",
+    "price": 299
+  },
+  {
+    "title": "2 Long Chicken + Extra King Pommes",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34529",
     "plu": "950",
     "price": 1099
   },
   {
-    "title": "Big King XXL + Golden King Pommes + 0,4l Coca Cola",
+    "title": "6 King Nuggets + Big King XXL + Extra Large Cola",
     "expireDate": "31.12.2024",
-    "uniqueID": "35443",
+    "uniqueID": "34543",
     "plu": "961",
     "price": 1399
   },
   {
-    "title": "Extra Large Chili Cheese Long Chicken + 0,4l Coca Cola",
+    "title": "Chili Cheese Fries",
     "expireDate": "31.12.2024",
-    "uniqueID": "35095",
+    "uniqueID": "25063",
+    "plu": "902",
+    "price": 199
+  },
+  {
+    "title": "X-tra Long Chili Cheese + Long Chicken + Extra King Pommes",
+    "expireDate": "31.12.2024",
+    "uniqueID": "32990",
     "plu": "951",
     "price": 1199
   },
   {
     "title": "6 Flame Wings",
     "expireDate": "31.12.2024",
-    "uniqueID": "35379",
+    "uniqueID": "23379",
     "plu": "916",
     "price": 499
   },
   {
-    "title": "King Nuggets Jr. Meal",
+    "title": "6 Chili Cheese Nuggets",
     "expireDate": "31.12.2024",
-    "uniqueID": "35445",
+    "uniqueID": "22273",
+    "plu": "904",
+    "price": 299
+  },
+  {
+    "title": "6 King Nuggets + King Jr. Meal",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34392",
     "plu": "964",
     "price": 799
   },
   {
-    "title": "Plant-based Nuggets Jr. Meal",
+    "title": "6 Plant-based Nuggets + King Jr. Meal",
     "expireDate": "31.12.2024",
-    "uniqueID": "35446",
+    "uniqueID": "34393",
     "plu": "965",
     "price": 799
   },
   {
+    "title": "Crispy Chicken + Extra Large Cola",
+    "expireDate": "31.12.2024",
+    "uniqueID": "25022",
+    "plu": "905",
+    "price": 699
+  },
+  {
     "title": "King Sundae",
     "expireDate": "31.12.2024",
-    "uniqueID": "35446",
+    "uniqueID": "64416",
     "plu": "985",
-    "price": 149
+    "price": 199
   },
   {
     "title": "King Fusion Smarties",
     "expireDate": "31.12.2024",
-    "uniqueID": "35411",
+    "uniqueID": "64471",
     "plu": "981",
     "price": 299
   },
   {
-    "title": "0,25l King Shake",
+    "title": "Beef Tortilla + Extra Large Cola",
     "expireDate": "31.12.2024",
-    "uniqueID": "35261",
+    "uniqueID": "26145",
+    "plu": "988",
+    "price": 999
+  },
+  {
+    "title": "0,25 l King Shake",
+    "expireDate": "31.12.2024",
+    "uniqueID": "64261",
     "plu": "982",
     "price": 199
   },
   {
-    "title": "0,4l King Shake",
+    "title": "0,4 l King Shake",
     "expireDate": "31.12.2024",
-    "uniqueID": "35897",
+    "uniqueID": "64897",
     "plu": "984",
     "price": 299
   },
   {
+    "title": "Crispy Chicken Tortilla + Extra Large Cola",
+    "expireDate": "31.12.2024",
+    "uniqueID": "25647",
+    "plu": "990",
+    "price": 899
+  },
+  {
     "title": "King Churros",
     "expireDate": "31.12.2024",
-    "uniqueID": "35418",
+    "uniqueID": "64418",
     "plu": "986",
     "price": 499
   },
   {
     "title": "King Churros + King Sundae",
     "expireDate": "31.12.2024",
-    "uniqueID": "35419",
+    "uniqueID": "64470",
     "plu": "987",
     "price": 499
   },
   {
-    "title": "2 Mittlere King Pommes",
+    "title": "20 King Nuggets",
     "expireDate": "31.12.2024",
-    "uniqueID": "35094",
-    "plu": "900",
-    "price": 0
+    "uniqueID": "22737",
+    "plu": "917",
+    "price": 799
   },
   {
-    "title": "6 King Nuggets",
+    "title": "2 Whopper + Extra Large Cola",
     "expireDate": "31.12.2024",
-    "uniqueID": "35379",
-    "plu": "901",
+    "uniqueID": "34467",
+    "plu": "952",
+    "price": 1299
+  },
+  {
+    "title": "Whopper Jr. + Extra Large Cola",
+    "expireDate": "31.12.2024",
+    "uniqueID": "25986",
+    "plu": "911",
+    "price": 699
+  },
+  {
+    "title": "6 Plant-based Nuggets",
+    "expireDate": "31.12.2024",
+    "uniqueID": "33167",
+    "plu": "948",
+    "price": 289
+  },
+  {
+    "title": "Whopper + Extra Large Cola",
+    "expireDate": "31.12.2024",
+    "uniqueID": "33500",
+    "plu": "915",
+    "price": 799
+  },
+  {
+    "title": "Whopper Jr.",
+    "expireDate": "31.12.2024",
+    "uniqueID": "16827",
+    "plu": "910",
     "price": 299
   },
   {
-    "title": "Chili Cheese Fries",
+    "title": "Plant-based Whopper + Extra Large Cola",
     "expireDate": "31.12.2024",
-    "uniqueID": "35063",
-    "plu": "902",
-    "price": 199
+    "uniqueID": "33502",
+    "plu": "949",
+    "price": 789
   },
   {
-    "title": "4 Chili Cheese Nuggets",
+    "title": "6 King Nuggets + Crispy Chicken",
     "expireDate": "31.12.2024",
-    "uniqueID": "35373",
-    "plu": "904",
-    "price": 299
+    "uniqueID": "32911",
+    "plu": "972",
+    "price": 899
   },
   {
     "title": "Crispy Chicken",
     "expireDate": "31.12.2024",
-    "uniqueID": "35379",
-    "plu": "905",
-    "price": 699
+    "uniqueID": "16829",
+    "plu": "918",
+    "price": 399
   },
   {
-    "title": "Beef Tortilla",
+    "title": "Plant-based Tortilla",
     "expireDate": "31.12.2024",
-    "uniqueID": "35145",
-    "plu": "988",
+    "uniqueID": "33464",
+    "plu": "989",
     "price": 999
   },
   {
-    "title": "Crispy Chicken Tortilla",
+    "title": "6 Hot Nuggets + Extra Large Cola",
     "expireDate": "31.12.2024",
-    "uniqueID": "35547",
-    "plu": "990",
+    "uniqueID": "34370",
+    "plu": "970",
+    "price": 999
+  },
+  {
+    "title": "Big King",
+    "expireDate": "31.12.2024",
+    "uniqueID": "16875",
+    "plu": "919",
+    "price": 399
+  },
+  {
+    "title": "Plant-based Long Chicken",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34202",
+    "plu": "942",
+    "price": 799
+  },
+  {
+    "title": "6 King Nuggets + Extra King Pommes",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34371",
+    "plu": "971",
+    "price": 999
+  },
+  {
+    "title": "Long Chicken",
+    "expireDate": "31.12.2024",
+    "uniqueID": "16876",
+    "plu": "920",
+    "price": 399
+  },
+  {
+    "title": "Plant-based Long Chicken + Extra Large Cola",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34213",
+    "plu": "945",
+    "price": 999
+  },
+  {
+    "title": "2 Cheeseburger",
+    "expireDate": "31.12.2024",
+    "uniqueID": "16081",
+    "plu": "912",
+    "price": 499
+  },
+  {
+    "title": "2 Chili Cheese Burger",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34543",
+    "plu": "60682",
+    "price": 499
+  },
+  {
+    "title": "Plant-based Nuggets + Plant-based Chili Cheese",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34023",
+    "plu": "946",
+    "price": 1099
+  },
+  {
+    "title": "Chili Cheese Burger + Big King XXL",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34542",
+    "plu": "960",
+    "price": 1299
+  },
+  {
+    "title": "Chili Cheese Burger + Crispy Chicken",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34529",
+    "plu": "959",
+    "price": 799
+  },
+  {
+    "title": "Plant-based Cheeseburger + Plant-based Chili Cheese",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34024",
+    "plu": "947",
+    "price": 499
+  },
+  {
+    "title": "6 King Nuggets + Double Cheeseburger",
+    "expireDate": "31.12.2024",
+    "uniqueID": "34890",
+    "plu": "928",
     "price": 899
   },
   {
-    "title": "20 King Nuggets",
+    "title": "6 Onion Rings + Double Chili Cheese Burger",
     "expireDate": "31.12.2024",
-    "uniqueID": "35379",
-    "plu": "917",
+    "uniqueID": "34537",
+    "plu": "925",
     "price": 799
+  },
+  {
+    "title": "6 Onion Rings",
+    "expireDate": "31.12.2024",
+    "uniqueID": "25020",
+    "plu": "909",
+    "price": 199
   }
 ]
