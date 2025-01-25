@@ -20,6 +20,10 @@ def main() -> List[Coupon]:
         "31.12.2024": {
             "thx": "Danke an den MyDealz User BubbleBobble: mydealz.de/deals/burger-king-coupons-gultig-vom-sa-09112024-bis-fr-10012025-2452049",
             "start_date": "09.11.2024"
+        },
+        "07.03.2025": {
+            "thx": "Danke an die MyDealz User DerShitstorm für den hochauflösenden Scan, HalloTheEngineer für das Digitalisieren der Coupons und den Dealersteller, siehe: mydealz.de/deals/burger-king-coupons-gultig-vom-sa-11012025-bis-fr-07032025-2497319",
+            "start_date": "11.01.2025"
         }
     }
 
@@ -84,11 +88,18 @@ def main() -> List[Coupon]:
     allresults = sorted(allresults,
                         key=lambda x: 0 if x.timestampExpire is None else x.timestampExpire)
     coupon_ids = []
+    coupon_plus = []
     finalResults = []
+    """ Detect duplicates, log them and ignore them. """
     for coupon in allresults:
         if coupon.id in coupon_ids:
-            print(f"Skipped duplicated paper coupon: {coupon.id}")
+            print(f"Skipped duplicated paper coupon via ID: {coupon.id}")
             continue
+        elif coupon.plu in coupon_plus:
+            print(f"Skipped duplicated paper coupon via PLU: {coupon.id} | PLU {coupon.plu}")
+            continue
+        coupon_ids.append(coupon.id)
+        coupon_plus.append(coupon.plu)
         finalResults.append(coupon)
     return finalResults
 
@@ -103,7 +114,7 @@ def getValidPaperCouponList() -> list:
 
 def getValidPaperCouponDict() -> dict:
     couponDict = {}
-    list = main()
-    for coupon in list:
+    resultlist = main()
+    for coupon in resultlist:
         couponDict[coupon.id] = coupon
     return couponDict

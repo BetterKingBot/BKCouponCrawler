@@ -1,0 +1,324 @@
+[
+  {
+    "title": "2 Whopper® + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34554",
+    "plu": "952",
+    "price": 1299
+  },
+  {
+    "title": "2 Whopper Jr.® + kleine King Pommes + 0,25l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "30605",
+    "plu": "911",
+    "price": 699
+  },
+  {
+    "title": " Whopper® + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "33501",
+    "plu": "915",
+    "price": 799
+  },
+  {
+    "title": " Whopper Jr.®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "16206",
+    "plu": "910",
+    "price": 299
+  },
+  {
+    "title": "6 King Nuggets® + Crispy Chicken + mittlere King Pommes + 0,4l Coca-Cola® + 1 Dip",
+    "expireDate": "07.03.2025",
+    "uniqueID": "33011",
+    "plu": "972",
+    "price": 899
+  },
+  {
+    "title": "Crispy Chicken",
+    "expireDate": "07.03.2025",
+    "uniqueID": "16129",
+    "plu": "918",
+    "price": 349
+  },
+  {
+    "title": "6 King Nuggets® + Big King® + mittlere King Pommes + 0,4l Coca-Cola® + 1 Dip",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34555",
+    "plu": "970",
+    "price": 999
+  },
+  {
+    "title": "Big King®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "16208",
+    "plu": "919",
+    "price": 399
+  },
+  {
+    "title": "6 King Nuggets® + Long Chicken® + mittlere King Pommes + 0,4l Coca-Cola® + 1 Dip",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34556",
+    "plu": "971",
+    "price": 999
+  },
+  {
+    "title": "Long Chicken®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "16207",
+    "plu": "920",
+    "price": 399
+  },
+  {
+    "title": "Double Chili Cheese Burger + mittlere King Pommes",
+    "expireDate": "07.03.2025",
+    "uniqueID": "60350",
+    "plu": "921",
+    "price": 599
+  },
+  {
+    "title": "Double Cheeseburger + mittlere King Pommes",
+    "expireDate": "07.03.2025",
+    "uniqueID": "60366",
+    "plu": "922",
+    "price": 599
+  },
+  {
+    "title": "Chili Cheese Burger + Big King XXL® + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34542",
+    "plu": "960",
+    "price": 1299
+  },
+  {
+    "title": "Chili Cheese Burger + Crispy Chicken + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34528",
+    "plu": "959",
+    "price": 799
+  },
+  {
+    "title": "2 Cheeseburger + kleine King Pommes + 0,25l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "30606",
+    "plu": "912",
+    "price": 599
+  },
+  {
+    "title": "2 Chili Cheese Burger + kleine King Pommes + 0,25l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "30607",
+    "plu": "914",
+    "price": 599
+  },
+  {
+    "title": "6 Plant-based Nuggets + 1 Dip",
+    "expireDate": "07.03.2025",
+    "uniqueID": "23361",
+    "plu": "948",
+    "price": 289
+  },
+  {
+    "title": "Plant-based Whopper® + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "33502",
+    "plu": "949",
+    "price": 789
+  },
+  {
+    "title": "Plant-based Tortilla + große King Pommes + 0,5l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "33646",
+    "plu": "989",
+    "price": 989
+  },
+  {
+    "title": "6 Onion Rings + Plant-based Long Chicken® + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34549",
+    "plu": "942",
+    "price": 839
+  },
+  {
+    "title": "6 Plant-based Nuggets + Plant-based Long Chicken® + mittlere King Pommes + 0,4l Coca-Cola® + 1 Dip",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34550",
+    "plu": "945",
+    "price": 979
+  },
+  {
+    "title": "6 Plant-based Nuggets + Plant-based X-tra Long Chili Cheese + mittlere King Pommes + 0,4l Coca-Cola® + 1 Dip",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34551",
+    "plu": "946",
+    "price": 1129
+  },
+  {
+    "title": "Plant-based Cheeseburger + Plant-based Chili Cheese Burger + kleine King Pommes + 0,25l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "30608",
+    "plu": "947",
+    "price": 579
+  },
+  {
+    "title": "6 Onion Rings",
+    "expireDate": "07.03.2025",
+    "uniqueID": "23004",
+    "plu": "909",
+    "price": 199
+  },
+  {
+    "title": "6 Onion Rings + Bacon King + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34505",
+    "plu": "956",
+    "price": 1299
+  },
+  {
+    "title": "Chili Cheese Burger + Bacon King + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34541",
+    "plu": "955",
+    "price": 1399
+  },
+  {
+    "title": "2 Big King® + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34548",
+    "plu": "940",
+    "price": 1099
+  },
+  {
+    "title": "2 Crispy Chicken + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "33001",
+    "plu": "929",
+    "price": 999
+  },
+  {
+    "title": "2 Long Chicken® + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34553",
+    "plu": "950",
+    "price": 1099
+  },
+  {
+    "title": "6 King Nuggets® + Big King XXL® + mittlere King Pommes + 0,4l Coca-Cola® + 1 Dip",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34543",
+    "plu": "961",
+    "price": 1399
+  },
+  {
+    "title": "X-tra Long Chili Cheese + Long Chicken® + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "34552",
+    "plu": "951",
+    "price": 1199
+  },
+  {
+    "title": "6 Flame Wings",
+    "expireDate": "07.03.2025",
+    "uniqueID": "23379",
+    "plu": "916",
+    "price": 499
+  },
+  {
+    "title": "6 Plant-based Nuggets + King Jr.® Meal + 1 Dip",
+    "expireDate": "07.03.2025",
+    "uniqueID": "33244",
+    "plu": "965",
+    "price": 789
+  },
+  {
+    "title": "0,5l King Shake®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "51597",
+    "plu": "984",
+    "price": 299
+  },
+  {
+    "title": "King Fusion Smarties®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "44414",
+    "plu": "981",
+    "price": 249
+  },
+  {
+    "title": "King Sundae",
+    "expireDate": "07.03.2025",
+    "uniqueID": "44425",
+    "plu": "985",
+    "price": 199
+  },
+  {
+    "title": "King Churros + Café Crème klein",
+    "expireDate": "07.03.2025",
+    "uniqueID": "44418",
+    "plu": "986",
+    "price": 449
+  },
+  {
+    "title": "King Churros + King Sundae",
+    "expireDate": "07.03.2025",
+    "uniqueID": "44419",
+    "plu": "987",
+    "price": 449
+  },
+  {
+    "title": "2 mittlere King Pommes (2 für 1)",
+    "expireDate": "07.03.2025",
+    "uniqueID": "22064",
+    "plu": "900",
+    "price": 0
+  },
+  {
+    "title": "6 King Nuggets® + 1 Dip",
+    "expireDate": "07.03.2025",
+    "uniqueID": "23378",
+    "plu": "901",
+    "price": 299
+  },
+  {
+    "title": "Chili Cheese Fries",
+    "expireDate": "07.03.2025",
+    "uniqueID": "22063",
+    "plu": "902",
+    "price": 199
+  },
+  {
+    "title": "6 Chili Cheese Nuggets",
+    "expireDate": "07.03.2025",
+    "uniqueID": "23273",
+    "plu": "904",
+    "price": 299
+  },
+  {
+    "title": "Crispy Chicken + mittlere King Pommes + 0,4l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "31897",
+    "plu": "905",
+    "price": 649
+  },
+  {
+    "title": "Beef Tortilla + große King Pommes + 0,5l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "33645",
+    "plu": "988",
+    "price": 999
+  },
+  {
+    "title": "Crispy Chicken Tortilla + große King Pommes + 0,5l Coca-Cola®",
+    "expireDate": "07.03.2025",
+    "uniqueID": "33647",
+    "plu": "990",
+    "price": 899
+  },
+  {
+    "title": "20 King Nuggets® + 3 Dips",
+    "expireDate": "07.03.2025",
+    "uniqueID": "23277",
+    "plu": "917",
+    "price": 799
+  }
+]

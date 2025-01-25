@@ -13,8 +13,7 @@ from couchdb.mapping import TextField, FloatField, ListField, IntegerField, Bool
 from pydantic import BaseModel
 
 from BotUtils import getImageBasePath
-from Helper import getTimezone, getCurrentDate, getFilenameFromURL, SYMBOLS, formatDateGerman, couponTitleContainsFriesAndDrink, BotAllowedCouponTypes, \
-    CouponType, \
+from Helper import getTimezone, getCurrentDate, getFilenameFromURL, SYMBOLS, formatDateGerman, couponTitleContainsFriesAndDrink,CouponType, \
     formatPrice, couponTitleContainsVeggieFood, shortenProductNames, couponTitleContainsPlantBasedFood
 
 

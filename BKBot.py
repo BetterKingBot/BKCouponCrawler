@@ -28,6 +28,7 @@ from CouponCategory import CouponCategory
 from Helper import BotAllowedCouponTypes, CouponType, TEXT_NOTIFICATION_DISABLE
 from UtilsOffers import offerGetImagePath
 
+MAX_CACHE_AGE_SECONDS = 7 * 24 * 60 * 60
 
 class CouponCallbackVars:
     ALL_COUPONS = f"?a=dcs&m={CouponViews.ALL.getViewCode()}&cs="
@@ -55,10 +56,6 @@ def generateCallbackRegEx(settings: dict):
         index += 1
     settingsCallbackRegEx += '$'
     return settingsCallbackRegEx
-
-
-MAX_CACHE_AGE_SECONDS = 7 * 24 * 60 * 60
-
 
 async def cleanupCache(cacheDict: dict):
     cacheDictCopy = cacheDict.copy()
@@ -319,9 +316,9 @@ class BKBot:
         allButtons.append([InlineKeyboardButton('Coupons ohne Menü', callback_data=CouponCallbackVars.ALL_COUPONS_WITHOUT_MENU)])
         allButtons.append([InlineKeyboardButton(f'Coupons mit Menü ({SYMBOLS.FRIES}+Drink)', callback_data=CouponCallbackVars.ALL_COUPONS_WITH_MENU)])
         for couponSrc in BotAllowedCouponTypes:
-            # Only add buttons for coupon categories for which at least one coupon is available
             couponCategory = self.crawler.getCachedCouponCategory(couponSrc)
             if couponCategory is None:
+                # No coupons available for that category
                 continue
             elif couponSrc == CouponType.PAYBACK and not user.settings.displayCouponCategoryPayback:
                 # Do not display this category if disabled by user
@@ -351,7 +348,7 @@ class BKBot:
                 [InlineKeyboardButton('Angebote', callback_data=CallbackVars.MENU_OFFERS)])
         if user.settings.displayBKWebsiteURLs:
             allButtons.append(
-                [InlineKeyboardButton('Spar Kings', url=URLs.BK_SPAR_KINGS), InlineKeyboardButton('KING Finder', url=URLs.PROTOCOL_BK + URLs.BK_KING_FINDER)])
+                [InlineKeyboardButton('KING Deals', url=URLs.BK_KING_DEALS), InlineKeyboardButton('KING Finder', url=URLs.PROTOCOL_BK + URLs.BK_KING_FINDER)])
         if user.settings.displayFeedbackCodeGenerator:
             allButtons.append([InlineKeyboardButton(f'Feedback Code Generator [{getFeedbackCodeCurrentMonthChars()}]', callback_data=CallbackVars.MENU_FEEDBACK_CODES)])
         if self.publicChannelName is not None and user.settings.displayFAQLinkButton:
@@ -1415,7 +1412,7 @@ class BKBot:
     async def batchProcess(self):
         """ Runs all processes which should only run once per day. """
         logging.info('Running batch process...')
-        self.crawl()
+        await self.crawl()
         # infoDB = self.crawler.getInfoDB()
         # infoDBDoc = InfoEntry.load(infoDB, DATABASES.INFO_DB)
         # lastSuccessfulChannelupdate = infoDBDoc.dateLastSuccessfulChannelUpdate
@@ -1443,9 +1440,9 @@ class BKBot:
         await self.cleanupCaches()
         logging.info('Batch process done.')
 
-    def crawl(self) -> bool:
+    async def crawl(self) -> bool:
         try:
-            self.crawler.crawlAndProcessData()
+            await self.crawler.crawlAndProcessData()
             return True
         except:
             traceback.print_exc()
@@ -1845,9 +1842,9 @@ async def notificationRoutine(bkbot):
 def main():
     bkbot: BKBot = BKBot()
     # Check for start-args to be executed immediately
-    if bkbot.args.crawl:
-        bkbot.crawl()
     loop = asyncio.get_event_loop()
+    if bkbot.args.crawl:
+        loop.create_task(bkbot.crawl())
     # Check for start args for stuff that can be executed in async way
     if bkbot.args.forcechannelupdatewithresend:
         loop.create_task(bkbot.renewPublicChannel())
