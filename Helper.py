@@ -2,7 +2,6 @@ import os
 import random
 import re
 from datetime import datetime, timedelta
-from re import Pattern
 from typing import Union
 
 import pytz
@@ -31,7 +30,7 @@ class HISTORYDB:
 class URLs:
     PROTOCOL_BK = 'https://www.'
     ELEMENT = 'https://app.element.io/#/room/#BetterKingDE:matrix.org'
-    BK_SPAR_KINGS = 'burgerking.de/sparkings'
+    BK_SPAR_KINGS = 'burgerking.de/sparkings'  # 2025-01-25: Does not exist anymore
     BK_KING_FINDER = 'burgerking.de/store-locator'
     BK_KING_DEALS = 'burgerking.de/kingdeals'
     NO_PROTOCOL_COUPONS = 'burgerking.de/rewards/offers'
@@ -264,9 +263,9 @@ def couponTitleContainsFriesAndDrink(title: str) -> bool:
     titleLower = title.lower()
     if '+' in titleLower and couponTitleContainsFries(titleLower) and couponTitleContainsDrink(titleLower):
         return True
-    elif re.compile(r'.*king\s*jr\s*\.?\s*meal.*').search(titleLower):
+    elif re.compile(r'.*jr\s*\.?\s*meal.*').search(titleLower):
         return True
-    elif re.compile(r'.*king\s*jr\s*\.?\s*menü.*').search(titleLower):
+    elif re.compile(r'.*jr\s*\.?\s*menü.*').search(titleLower):
         return True
     else:
         return False
@@ -341,16 +340,6 @@ def couponTitleContainsDrink(title: str) -> bool:
         return True
     else:
         return False
-
-
-REGEX_PLU_WITH_AT_LEAST_ONE_LETTER = re.compile(r'(?i)^([A-Z]+)\d+[A-Z]?$')
-
-
-def isCouponShortPLUWithAtLeastOneLetter(plu: str) -> bool:
-    """ 2021-04-13: Examples of allowed shortPLUs: "X11", "X11B"
-    2021-05-25: New e.g. "KDM2"
-    """
-    return plu is not None and REGEX_PLU_WITH_AT_LEAST_ONE_LETTER.search(plu) is not None
 
 
 def generateFeedbackCode() -> str:

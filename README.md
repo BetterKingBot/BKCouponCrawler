@@ -225,6 +225,11 @@ Kann der Bot meine Telefonnummer sehen?
 Nein das können Bots standardmäßig nur, wenn du es erlaubst.
 Selbst wenn du dies tust: Der Bot speichert ausschließlich die oben genannten Daten.
 
+Wie kann ich (Papier-)Coupons am Terminal einlösen?
+Seit der Einführung des MyBK Prämienprogramms ist das etwas schwer zu finden:
+Bei dem Punkt, an dem du deinen "mybk Logincode" eingeben kannst, kannst du auch einfach Papiercoupons eintippen.
+Wichtig ist, dass du dort entweder den QR Code zeigst oder den langen Code eintippst, nicht den dreistelligen kurzern Code.
+
 Meine BK Filiale verlangt original Papier-/App Coupons, wie kann ich die aus dem Channel dennoch verwenden?
 Es gibt mehrere Möglichkeiten:
 - Versuche, die Kurz-Codes einfach anzusagen

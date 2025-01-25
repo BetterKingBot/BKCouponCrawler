@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 
 from couchdb import Database
@@ -170,17 +170,25 @@ async def notifyAdminsAboutProblems(bkbot) -> None:
         return
     infoDatabase = bkbot.crawler.getInfoDB()
     infoDBDoc = InfoEntry.load(infoDatabase, DATABASES.INFO_DB)
-    timedeltaLastSuccessfulRun = datetime.now() - infoDBDoc.dateLastSuccessfulCrawlRun if infoDBDoc.dateLastSuccessfulCrawlRun is not None else None
-    timedeltaLastSuccessfulChannelupdate = datetime.now() - infoDBDoc.dateLastSuccessfulChannelUpdate if infoDBDoc.dateLastSuccessfulChannelUpdate is not None else None
+    if infoDBDoc is None:
+        # First run and/or there has never been a crawl process
+        return
+    elif infoDBDoc.dateLastSuccessfulCrawlRun is None or infoDBDoc.dateLastSuccessfulChannelUpdate is None:
+        return
+    test = False
+    if test:
+        infoDBDoc.dateLastSuccessfulCrawlRun = datetime.now() - timedelta(days=3)
+    timedeltaLastSuccessfulRun = datetime.now() - infoDBDoc.dateLastSuccessfulCrawlRun
+    timedeltaLastSuccessfulChannelupdate = datetime.now() - infoDBDoc.dateLastSuccessfulChannelUpdate
     text = ''
-    if timedeltaLastSuccessfulRun is not None and timedeltaLastSuccessfulRun.seconds > 48 * 60 * 60:
+    if timedeltaLastSuccessfulRun.total_seconds() > 48 * 60 * 60:
         text += f'{SYMBOLS.WARNING} Crawler Fehler: Letzter erfolgreicher Crawlvorgang war am {formatDateGermanHuman(infoDBDoc.dateLastSuccessfulCrawlRun)}'
-    if timedeltaLastSuccessfulChannelupdate is not None and timedeltaLastSuccessfulChannelupdate.seconds > 48 * 60 * 60:
+    if timedeltaLastSuccessfulChannelupdate.total_seconds() > 48 * 60 * 60:
         if len(text) > 0:
             text += '\n'
         text += f'{SYMBOLS.WARNING} Channelupdate Fehler: Letztes erfolgreiches Channelupdate war am {formatDateGermanHuman(infoDBDoc.dateLastSuccessfulChannelUpdate)}'
     if len(text) == 0:
-        # No notifications to send out
+        # No warning notifications to send out
         return
     userDB = bkbot.userdb
     adminUsersToNotify = []
@@ -217,7 +225,7 @@ async def updatePublicChannel(bkbot, updateMode: ChannelUpdateMode):
         passedSeconds = (datetime.now() - infoDBDoc.dateLastSuccessfulChannelUpdate).total_seconds()
         logging.info("Passed seconds since last channel update: " + str(passedSeconds))
     activeCoupons = bkbot.crawler.getFilteredCouponsAsDict(
-        CouponFilter(activeOnly=True, allowedCouponTypes=BotAllowedCouponTypes, sortCode=CouponSortModes.TYPE_MENU_PRICE.getSortCode()))
+        CouponFilter(activeOnly=True, sortCode=CouponSortModes.TYPE_MENU_PRICE.getSortCode()))
     channelDB = bkbot.couchdb[DATABASES.TELEGRAM_CHANNEL]
     # All coupons we want to send out this run
     couponsToSendOut = {}
@@ -441,14 +449,15 @@ async def nukeChannel(bkbot):
     hasLoggedDeletionOfCouponOverviewMessageIDs = False
     for couponType in BotAllowedCouponTypes:
         couponOverviewMessageIDs = infoDoc.getMessageIDsForCouponCategory(couponType)
-        if len(couponOverviewMessageIDs) > 0:
-            if not hasLoggedDeletionOfCouponOverviewMessageIDs:
-                # Only print this logger once
-                logging.info("Deleting information messages...")
-                hasLoggedDeletionOfCouponOverviewMessageIDs = True
-            await asyncio.create_task(bkbot.deleteMessages(chat_id=bkbot.getPublicChannelChatID(), messageIDs=couponOverviewMessageIDs))
-            infoDoc.deleteCouponCategoryMessageIDs(couponType)
-            updateInfoDoc = True
+        if len(couponOverviewMessageIDs) == 0:
+            continue
+        if not hasLoggedDeletionOfCouponOverviewMessageIDs:
+            # Only print this logger once
+            logging.info("Deleting information messages...")
+            hasLoggedDeletionOfCouponOverviewMessageIDs = True
+        await asyncio.create_task(bkbot.deleteMessages(chat_id=bkbot.getPublicChannelChatID(), messageIDs=couponOverviewMessageIDs))
+        infoDoc.deleteCouponCategoryMessageIDs(couponType)
+        updateInfoDoc = True
     # Delete coupon information message
     if infoDoc.informationMessageID is not None:
         logging.info(f'Deleting channel overview message with ID {infoDoc.informationMessageID}')
