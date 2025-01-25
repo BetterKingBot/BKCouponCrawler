@@ -432,11 +432,12 @@ class BKCrawler:
                 logging.info(coupon)
             logging.info(getLogSeparatorString())
         logging.info(f'Total coupons crawl time: {getFormattedPassedTime(timestampCrawlStart)}')
-        # Update timestamp of last complete run in DB
-        infoDatabase = self.getInfoDB()
-        infoDBDoc = InfoEntry.load(infoDatabase, DATABASES.INFO_DB)
-        infoDBDoc.dateLastSuccessfulCrawlRun = datetime.now()
-        infoDBDoc.store(infoDatabase)
+        if len(appCoupons) > 0:
+            """ Update timestamp of last complete run in DB. Assume that the app always contains at least one valid- or upcoming coupon. """
+            infoDatabase = self.getInfoDB()
+            infoDBDoc = InfoEntry.load(infoDatabase, DATABASES.INFO_DB)
+            infoDBDoc.dateLastSuccessfulCrawlRun = datetime.now()
+            infoDBDoc.store(infoDatabase)
 
     async def addExtraCoupons(self, crawledCouponsDict: dict, immediatelyAddToDB: bool):
         """ Adds extra coupons which have been manually added to config_extra_coupons.json and paper coupons.
