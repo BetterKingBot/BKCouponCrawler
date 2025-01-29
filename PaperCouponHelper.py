@@ -17,10 +17,6 @@ def main() -> List[Coupon]:
             "thx": "Danke an die MyDealz User DerShitstorm und rote_rakete: mydealz.de/deals/burger-king-coupons-gultig-vom-sa-07092024-bis-fr-08112024-2418876#reply-49124677",
             "start_date": "07.09.2024"
         },
-        "31.12.2024": {
-            "thx": "Danke an den MyDealz User BubbleBobble: mydealz.de/deals/burger-king-coupons-gultig-vom-sa-09112024-bis-fr-10012025-2452049",
-            "start_date": "09.11.2024"
-        },
         "07.03.2025": {
             "thx": "Danke an die MyDealz User DerShitstorm für den hochauflösenden Scan, HalloTheEngineer für das Digitalisieren der Coupons und den Dealersteller, siehe: mydealz.de/deals/burger-king-coupons-gultig-vom-sa-11012025-bis-fr-07032025-2497319",
             "start_date": "11.01.2025"
