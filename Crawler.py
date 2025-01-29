@@ -190,7 +190,11 @@ class BKCrawler:
             """ Catch exception so that we can continue to add/process paper coupons. """
             logging.warning("API crawler failed")
             apiCrawlerException = e
-        await self.addExtraCoupons(crawledCouponsDict=crawledCouponsDict, immediatelyAddToDB=False)
+        immediatelyAddToDB = False
+        if apiCrawlerException is not None:
+            """ Small workaround so that even if the crawler fails, we will still download the coupon images and generate the QR codes. """
+            immediatelyAddToDB = True
+        await self.addExtraCoupons(crawledCouponsDict=crawledCouponsDict, immediatelyAddToDB=immediatelyAddToDB)
         self.processCrawledCoupons(crawledCouponsDict)
         if apiCrawlerException is not None:
             # Raise exception to signal upper handling that API crawler has failed.
@@ -274,8 +278,9 @@ class BKCrawler:
         appCouponsNotYetActive = []
         totalindex = 0
         childindex = 0
-        try:
-            for couponBKTmp in couponArrayBK:
+
+        for couponBKTmp in couponArrayBK:
+            try:
                 if couponBKTmp.get('testOnly') is True:
                     # 2025-01-25
                     logging.info("Skipping internal TEST-item")
@@ -337,16 +342,13 @@ class BKCrawler:
                             elif titleShortened == subtitleShortened:  # Small hack: Shorten titles before comparing them
                                 # Title and subtitle are the same -> Use title only
                                 titleFull = title
+                            elif not subtitle.startswith('+'):
+                                logging.info(
+                                    f'Coupon {uniqueCouponID}: Possible subtitle which should not be included in coupon title because it doesnt start with a plus sumbol: {subtitle=}')
+                                titleFull = title
                             else:
-                                # Assume that subtitle is usable and put both together
+                                # Assume that subtitle is usable and add it to title
                                 titleFull = title + ' ' + subtitle
-                                # Log seemingly strange values
-                                if not subtitle.startswith('+'):
-                                    logging.info(
-                                        f'Coupon {uniqueCouponID}: Possible subtitle which should not be included in coupon title because it doesnt start with a plus sumbol: {subtitle=} | {title=} | {titleFull=}')
-                                elif '+' not in subtitle:
-                                    logging.info(
-                                        f'Coupon {uniqueCouponID}: Possible subtitle which should not be included in coupon title because it doesnt contain a plus symbol: {subtitle=} | {title=} | {titleFull=}')
 
                     price = couponBK['offerPrice']
                     plu = couponBK['shortCode']
@@ -420,9 +422,10 @@ class BKCrawler:
                         appCouponsNotYetActive.append(coupon)
                     childindex += 1
                     totalindex += 1
-        except Exception as error:
-            logging.warning(f"Failed to process coupon object with index {totalindex=} | {childindex=}")
-            raise error
+            except Exception as error:
+                traceback.print_exc()
+                logging.warning(f"Failed to process coupon object with index {totalindex=} | {childindex=} -> Maybe new MyBK code??")
+                continue
 
         logging.info(f'Coupons in app total: {len(appCoupons)}')
         logging.info(f'Coupons in app not yet active: {len(appCouponsNotYetActive)}')
