@@ -83,14 +83,13 @@ def shortenProductNames(couponTitle: str) -> str:
     """ Let's start with fixing the fries -> Using an emoji as replacement really shortens product titles with fries! """
     couponTitle = sanitizeCouponTitle(couponTitle)
     pommesReplacement = SYMBOLS.FRIES
-    colaReplacement = "🥤"
     # Fries replacements
     couponTitle = re.sub(r"kleine(\s*KING)?\s*Pommes", "S" + pommesReplacement, couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"mittlere(\s*KING)?\s*Pommes", "M" + pommesReplacement, couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"große(\s*KING)?\s*Pommes", "L" + pommesReplacement, couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"KING\s*(Pommes)", pommesReplacement, couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Fries", pommesReplacement, couponTitle, flags=re.IGNORECASE)  # E.g. 'Curly Fries'
-    couponTitle = re.sub(r"(Coca[\s-]*)?Cola", colaReplacement, couponTitle, flags=re.IGNORECASE)
+    couponTitle = re.sub(r"(Coca[\s-]*)?Cola", SYMBOLS.COLA, couponTitle, flags=re.IGNORECASE)
     couponTitle = re.sub(r"Big KING", r"BigK", couponTitle, flags=re.IGNORECASE)
     """ Remove "KING" from some product titles """
     couponTitle = re.sub(r"(Bacon|Fish|Halloumi)\s*KING", r"\1", couponTitle, flags=re.IGNORECASE)
@@ -215,6 +214,8 @@ class SYMBOLS:
     BACK = '⬅Zurück'
     MEAT = '🥩'
     BROCCOLI = '🥦'
+    CHILI = '🌶️'
+    COLA = '🥤'
     CONFIRM = '✅'
     DENY = '🚫'
     DENY2 = '❌'
@@ -283,6 +284,9 @@ def couponTitleContainsVeggieFood(title: str) -> bool:
         # Ice cream
         return True
     elif '+' in titleLower:
+        """ Title contains multiple products. Could be e.g. fries + meat so as long as we cannot safely separate the products,
+         we can't determine a safe "veggie-status".
+         """
         return False
     elif couponTitleContainsFries(titleLower):
         return True
@@ -337,6 +341,14 @@ def couponTitleContainsDrink(title: str) -> bool:
     elif re.compile(r'red\s*bull').search(titleLower):
         return True
     elif re.compile(r'monster\s*energy').search(titleLower):
+        return True
+    else:
+        return False
+
+
+def couponTitleContainsChiliCheese(title: str) -> bool:
+    titleLower = title.lower()
+    if 'chili' in titleLower and 'cheese' in titleLower:
         return True
     else:
         return False

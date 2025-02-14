@@ -17,7 +17,9 @@ from Helper import *
 from Helper import getPathImagesOffers, getPathImagesProducts, \
     isValidImageFile, CouponType, Paths
 from UtilsOffers import offerGetImagePath, offerIsValid
-from UtilsCouponsDB import Coupon, InfoEntry, CouponFilter, getCouponTitleMapping, User, removeDuplicatedCoupons, sortCoupons, CouponTextRepresentationPLUMode
+from UtilsCouponsDB import Coupon, getCouponTitleMapping, removeDuplicatedCoupons, sortCoupons, CouponTextRepresentationPLUMode
+from filters import CouponFilter
+from models import InfoEntry, User
 from CouponCategory import CouponCategory
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
@@ -792,7 +794,7 @@ class BKCrawler:
                     startDateFormatted = datetimeCouponAvailable.strftime('%d.%m.')
                 else:
                     startDateFormatted = "?"
-                couponDescr = futureCoupon.generateCouponShortText(highlightIfNew=False, includeVeggieSymbol=True, plumode=CouponTextRepresentationPLUMode.ALL_PLUS)
+                couponDescr = futureCoupon.generateCouponShortText(highlightIfNew=False, plumode=CouponTextRepresentationPLUMode.ALL_PLUS)
                 thisCouponText = f"<b>{startDateFormatted}</b> | " + couponDescr
                 self.cachedFutureCouponsText += "\n" + thisCouponText
 

@@ -22,8 +22,10 @@ from BotUtils import loadConfig, ImageCache
 from Helper import *
 from Crawler import BKCrawler, UserStats
 
-from UtilsCouponsDB import Coupon, User, ChannelCoupon, InfoEntry, getCouponsSeparatedByType, CouponFilter, UserFavoritesInfo, \
+from UtilsCouponsDB import Coupon, getCouponsSeparatedByType, UserFavoritesInfo, \
     USER_SETTINGS_ON_OFF, CouponViews, sortCouponsAsList, MAX_HOURS_ACTIVITY_TRACKING, getCouponViewByIndex, CouponTextRepresentationPLUMode
+from filters import CouponFilter
+from models import InfoEntry, ChannelCoupon, User
 from CouponCategory import CouponCategory
 from Helper import BotAllowedCouponTypes, CouponType, TEXT_NOTIFICATION_DISABLE
 from UtilsOffers import offerGetImagePath
@@ -569,6 +571,7 @@ class BKBot:
             # Whenever the user has at least one favorite coupon on page > 1 we'll replace the dummy button in the middle and add Easter Egg functionality :)
             currentPageContainsAtLeastOneFavoriteCoupon = False
             includeVeggieSymbol = user.settings.highlightVeggieCouponsInCouponButtonTexts
+            includeChiliCheeseSymbol = user.settings.highlightChiliCheeseCouponsInCouponButtonTexts
             if view.includeVeggieSymbol is not None:
                 # Override user setting with value defined in coupon-view
                 includeVeggieSymbol = view.includeVeggieSymbol
@@ -578,7 +581,7 @@ class BKBot:
                     pluRepresentationMode: CouponTextRepresentationPLUMode = CouponTextRepresentationPLUMode.LONG_PLU
                 else:
                     pluRepresentationMode: CouponTextRepresentationPLUMode = CouponTextRepresentationPLUMode.SHORT_PLU
-                buttonText = coupon.generateCouponShortText(highlightIfNew=user.settings.highlightNewCouponsInCouponButtonTexts, includeVeggieSymbol=includeVeggieSymbol, plumode=pluRepresentationMode)
+                buttonText = coupon.generateCouponShortText(highlightIfNew=user.settings.highlightNewCouponsInCouponButtonTexts, includeVeggieSymbol=includeVeggieSymbol, includeChiliCheeseSymbol=includeChiliCheeseSymbol, plumode=pluRepresentationMode)
                 if user.isFavoriteCoupon(coupon):
                     currentPageContainsAtLeastOneFavoriteCoupon = True
                     if view.highlightFavorites:
@@ -1056,7 +1059,7 @@ class BKBot:
     def generateCouponShortTextWithHyperlinkToChannelPost(self, coupon: Coupon, messageID: int) -> str:
         """ Returns e.g. "Y15 | 2Whopper+M🍟+0,4Cola (https://t.me/betterkingpublic/1054) | 8,99€" """
         text = "<b>" + coupon.getPLUOrUniqueIDOrRedemptionHint() + "</b> | <a href=\"https://t.me/" + self.getPublicChannelName() + '/' + str(
-            messageID) + "\">" + coupon.getTitleShortened(includeVeggieSymbol=True) + "</a>"
+            messageID) + "\">" + coupon.getTitleShortened() + "</a>"
         priceFormatted = coupon.getPriceFormatted()
         if priceFormatted is not None:
             text += " | " + priceFormatted
@@ -1362,7 +1365,7 @@ class BKBot:
                 channelCoupon = ChannelCoupon.load(channelDB, coupon.id)
                 messageID = channelCoupon.getMessageIDForChatHyperlink()
                 if messageID is not None:
-                    couponText = coupon.generateCouponShortTextFormattedWithHyperlinkToChannelPost(highlightIfNew=False, includeVeggieSymbol=True,
+                    couponText = coupon.generateCouponShortTextFormattedWithHyperlinkToChannelPost(highlightIfNew=False,
                                                                                                    publicChannelName=self.getPublicChannelName(),
                                                                                                    messageID=messageID)
                 else:
