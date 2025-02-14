@@ -22,6 +22,7 @@ class CouponCategory:
         self.numberofCouponsNew = 0
         self.numberofCouponsWithFriesAndDrink = 0
         self.numberofVeggieCoupons = 0
+        self.numberofChiliCheeseCoupons = 0
         self.totalPrice = 0
         if isinstance(coupons, dict):
             self.coupons = list(coupons.values())
@@ -222,6 +223,8 @@ class CouponCategory:
                 self.numberofCouponsWithFriesAndDrink += 1
             if coupon.isVeggie():
                 self.numberofVeggieCoupons += 1
+            if coupon.isContainsChiliCheese():
+                self.numberofChiliCheeseCoupons += 1
             # Update expire-date info
             date = coupon.getExpireDatetime()
             if self.expireDatetimeLowest is None and self.expireDatetimeHighest is None:

@@ -3,35 +3,15 @@ import os
 import re
 from datetime import datetime
 from enum import Enum
-from io import BytesIO
-from typing import Union, List, Optional
+from typing import Union, List
 
-from barcode.ean import EuropeanArticleNumber13
-from barcode.writer import ImageWriter
-from couchdb.mapping import TextField, FloatField, ListField, IntegerField, BooleanField, Document, DictField, Mapping, \
-    DateTimeField
-from pydantic import BaseModel
+from couchdb.mapping import TextField, FloatField, ListField, IntegerField, BooleanField, Document
 
 from BotUtils import getImageBasePath
-from Helper import getTimezone, getCurrentDate, getFilenameFromURL, SYMBOLS, formatDateGerman, couponTitleContainsFriesAndDrink,CouponType, \
-    formatPrice, couponTitleContainsVeggieFood, shortenProductNames, couponTitleContainsPlantBasedFood
+from Helper import getTimezone, getCurrentDate, getFilenameFromURL, SYMBOLS, formatDateGerman, couponTitleContainsFriesAndDrink, CouponType, \
+    formatPrice, couponTitleContainsVeggieFood, shortenProductNames, couponTitleContainsPlantBasedFood, couponTitleContainsChiliCheese
+from filters import CouponFilter
 
-
-class CouponFilter(BaseModel):
-    """ removeDuplicates: Enable to filter duplicated coupons for same products - only returns cheapest of all
-     If the same product is available as paper- and app coupon, App coupon is preferred."""
-    activeOnly: Optional[bool] = True
-    isNotYetActive: Optional[Union[bool, None]] = None
-    containsFriesAndCoke: Optional[Union[bool, None]] = None
-    # Enable to filter duplicated coupons for same products - only returns cheapest of all
-    removeDuplicates: Optional[Union[bool, None]] = None
-    allowedCouponTypes: Optional[Union[List[int], None]] = None  # None = allow all sources!
-    isNew: Optional[Union[bool, None]] = None
-    isHidden: Optional[Union[bool, None]] = None
-    isVeggie: Optional[Union[bool, None]] = None
-    isPlantBased: Optional[Union[bool, None]] = None
-    isEatable: Optional[Union[bool, None]] = None
-    sortCode: Optional[Union[None, int]]
 
 class CouponTextRepresentationPLUMode(Enum):
     """ This can be used to define how PLUs in short texts shall be represented. """
@@ -48,14 +28,10 @@ class CouponSortMode:
 
     def getSortCode(self) -> Union[int, None]:
         """ Returns position of current sort mode in array of all sort modes. """
-        sortModes = getAllSortModes()
-        index = 0
-        for sortMode in sortModes:
-            if sortMode == self:
-                return index
-            index += 1
-        # This should never happen
-        return None
+        try:
+            return getAllSortModes().index(self)
+        except ValueError:
+            return None  # Sollte eigentlich nicht vorkommen
 
 
 class CouponSortModes:
@@ -223,24 +199,28 @@ class Coupon(Document):
     def getSubtitle(self) -> Union[str, None]:
         return self.subtitle
 
-    def getTitleShortened(self, includeVeggieSymbol: bool) -> Union[str, None]:
+    def getTitleShortened(self, includeVeggieSymbol: bool = True, includeChiliCheeseSymbol: bool = True) -> Union[str, None]:
         shortenedTitle = shortenProductNames(self.getTitle())
-        if includeVeggieSymbol:
-            nutritionSymbol = self.getNutritionSymbols()
-            if nutritionSymbol is not None:
-                shortenedTitle = nutritionSymbol + shortenedTitle
+        nutritionSymbolsString = self.getNutritionSymbols(includeVeggieSymbol=includeVeggieSymbol, includeChiliCheeseSymbol=includeChiliCheeseSymbol)
+        if nutritionSymbolsString is not None:
+            shortenedTitle = nutritionSymbolsString + shortenedTitle
         return shortenedTitle
 
-    def getNutritionSymbols(self) -> Union[str, None]:
+    def getNutritionSymbols(self, includeMeatSymbol: bool = False, includeVeggieSymbol: bool = True, includeChiliCheeseSymbol: bool = True) -> Union[str, None]:
+        """ Returns string of [allowed] nutrition symbols. """
         if not self.isEatable():
             return None
-        enableMeatSymbol = False
-        if enableMeatSymbol and self.containsMeat():
-            return '🥩'
-        elif self.isVeggie():
-            return SYMBOLS.BROCCOLI
-        else:
+        symbols = []
+        if includeMeatSymbol and self.isContainsMeat():
+            symbols.append(SYMBOLS.MEAT)
+        elif includeVeggieSymbol and self.isVeggie():
+            symbols.append(SYMBOLS.BROCCOLI)
+        if includeChiliCheeseSymbol and self.isContainsChiliCheese():
+            symbols.append(SYMBOLS.CHILI)
+        if len(symbols) == 0:
             return None
+        symbolsString = "".join(symbols)
+        return symbolsString
 
     def isExpiredForLongerTime(self) -> bool:
         """ Using this check, coupons that e.g. expire on midnight and get elongated will not be marked as new because really they aren't. """
@@ -286,6 +266,9 @@ class Coupon(Document):
     def isContainsFriesAndDrink(self) -> bool:
         return couponTitleContainsFriesAndDrink(self.getTitle())
 
+    def isContainsChiliCheese(self) -> bool:
+        return couponTitleContainsChiliCheese(self.getTitle())
+
     def isPlantBased(self) -> bool:
         if self.tags is not None:
             # First check tags
@@ -299,10 +282,7 @@ class Coupon(Document):
             return False
 
     def isVeggie(self) -> bool:
-        if self.type == CouponType.PAYBACK:
-            # Yes, Payback coupons are technically veggie except for those that are only valid for articles containing meat
-            return True
-        elif self.containsMeat():
+        if self.isContainsMeat():
             """ 
             Check if coupon contains meat. Some of them are wrongly tagged so ket's fix that by also looking into the product titles.
              """
@@ -324,7 +304,7 @@ class Coupon(Document):
         # If in doubt, the product is not veggie
         return False
 
-    def containsMeat(self) -> bool:
+    def isContainsMeat(self) -> bool:
         """ Returns true if this coupon contains at least one article with meat. """
         """ First check for plant based stuff in title because BK sometimes has wrong tags (e.g. tag contains "chicken" when article is veggie lol)... """
         if self.isPlantBased():
@@ -337,6 +317,10 @@ class Coupon(Document):
 
         titleLower = self.getTitle().lower()
         if 'chicken' in titleLower:
+            return True
+        elif 'wings' in titleLower:
+            return True
+        elif 'beef' in titleLower:
             return True
         else:
             return False
@@ -508,7 +492,7 @@ class Coupon(Document):
             description += f"{SYMBOLS.WARNING}Achtung!\nDerzeit fehlen die original Produktbilder von Papiercoupons!\nDas Bild dieses Coupons stammt vom gleichnamigen App Coupon! Es gelten die Textangaben in den Buttons und hier im Post-Text, nicht die aus den Bildern!!"
         return description
 
-    def generateCouponShortText(self, highlightIfNew: bool, includeVeggieSymbol: bool, plumode: CouponTextRepresentationPLUMode) -> str:
+    def generateCouponShortText(self, highlightIfNew: bool = True, includeVeggieSymbol: bool = True, includeChiliCheeseSymbol: bool = True, plumode: CouponTextRepresentationPLUMode = CouponTextRepresentationPLUMode.ALL_PLUS) -> str:
         """ Returns e.g. "Y15 | 2Whopper+M🍟+0,4Cola | 8,99€" """
         if plumode == CouponTextRepresentationPLUMode.ALL_PLUS and self.plu is not None:
             # All PLUs
@@ -522,7 +506,7 @@ class Coupon(Document):
         couponText = ''
         if highlightIfNew and self.isNewCoupon():
             couponText += SYMBOLS.NEW
-        couponText += vouchercode + " | " + self.getTitleShortened(includeVeggieSymbol=includeVeggieSymbol)
+        couponText += vouchercode + " | " + self.getTitleShortened(includeVeggieSymbol=includeVeggieSymbol, includeChiliCheeseSymbol=includeChiliCheeseSymbol)
         couponText = self.appendPriceInfoText(couponText)
         return couponText
 
@@ -531,18 +515,18 @@ class Coupon(Document):
         couponText = ''
         if highlightIfNew and self.isNewCoupon():
             couponText += SYMBOLS.NEW
-        couponText += "<b>" + self.getPLUOrUniqueIDOrRedemptionHint() + "</b> | " + self.getTitleShortened(includeVeggieSymbol=True)
+        couponText += "<b>" + self.getPLUOrUniqueIDOrRedemptionHint() + "</b> | " + self.getTitleShortened()
         couponText = self.appendPriceInfoText(couponText)
         return couponText
 
-    def generateCouponShortTextFormattedWithHyperlinkToChannelPost(self, highlightIfNew: bool, includeVeggieSymbol: bool, publicChannelName: str,
+    def generateCouponShortTextFormattedWithHyperlinkToChannelPost(self, highlightIfNew: bool, publicChannelName: str,
                                                                    messageID: int) -> str:
         """ Returns e.g. "Y15 | 2Whopper+M🍟+0,4Cola (https://t.me/betterkingpublic/1054) | 8,99€" """
         couponText = "<b>" + self.getPLUOrUniqueIDOrRedemptionHint() + "</b> | <a href=\"https://t.me/" + publicChannelName + '/' + str(
             messageID) + "\">"
         if highlightIfNew and self.isNewCoupon():
             couponText += SYMBOLS.NEW
-        couponText += self.getTitleShortened(includeVeggieSymbol=includeVeggieSymbol) + "</a>"
+        couponText += self.getTitleShortened() + "</a>"
         couponText = self.appendPriceInfoText(couponText)
         return couponText
 
@@ -657,384 +641,6 @@ MAX_SECONDS_WITHOUT_USAGE_UNTIL_SEND_WARNING_TO_USER = MAX_SECONDS_WITHOUT_USAGE
 MAX_HOURS_ACTIVITY_TRACKING = 48
 MAX_TIMES_INFORM_ABOUT_UPCOMING_AUTO_ACCOUNT_DELETION = 3
 MIN_SECONDS_BETWEEN_UPCOMING_AUTO_DELETION_WARNING = 2 * 24 * 60 * 60
-
-
-class User(Document):
-    settings = DictField(
-        Mapping.build(
-            displayCouponCategoryAllCouponsLongListWithLongTitles=BooleanField(default=False),
-            displayCouponCategoryAppCouponsHidden=BooleanField(default=True),
-            # displayCouponCategoryMeatWithoutPlantBased=BooleanField(default=False),
-            displayCouponCategoryVeggie=BooleanField(default=True),
-            displayCouponCategoryPayback=BooleanField(default=True),
-            displayCouponSortButton=BooleanField(default=True),
-            enableTerminalMode=BooleanField(default=False),
-            displayOffersButton=BooleanField(default=True),
-            displayBKWebsiteURLs=BooleanField(default=True),
-            displayFeedbackCodeGenerator=BooleanField(default=True),
-            displayFAQLinkButton=BooleanField(default=True),
-            displayDonateButton=BooleanField(default=True),
-            displayAdminButtons=BooleanField(default=True),
-            displayPlantBasedCouponsWithinGenericCategories=BooleanField(default=True),
-            displayHiddenUpsellingAppCouponsWithinGenericCategories=BooleanField(default=True),
-            hideDuplicates=BooleanField(default=False),
-            notifyWhenFavoritesAreBack=BooleanField(default=False),
-            notifyWhenNewCouponsAreAvailable=BooleanField(default=False),
-            notifyMeAsAdminIfThereAreProblems=BooleanField(default=True),
-            notifyOnBotNewsletter=BooleanField(default=True),
-            highlightFavoriteCouponsInButtonTexts=BooleanField(default=True),
-            highlightNewCouponsInCouponButtonTexts=BooleanField(default=True),
-            highlightVeggieCouponsInCouponButtonTexts=BooleanField(default=True),
-            displayQR=BooleanField(default=True),
-            autoDeleteExpiredFavorites=BooleanField(default=False),
-            enableBetaFeatures=BooleanField(default=False),
-        )
-    )
-    botBlockedCounter = IntegerField(default=0)
-    easterEggCounter = IntegerField(default=0)
-    favoriteCoupons = DictField(default={})
-    paybackCard = DictField(
-        Mapping.build(
-            paybackCardNumber=TextField(),
-            addedDate=DateTimeField()
-        ))
-    couponViewSortModes = DictField(default={})
-    pendingNotifications = ListField(TextField())
-    # Rough timestamp when user user start commenad of bot last time -> Can be used to delete inactive users after X time
-    timestampLastTimeBotUsed = FloatField(default=0)
-    timestampLastTimeNotificationSentSuccessfully = FloatField(default=0)
-    timesInformedAboutUpcomingAutoAccountDeletion = IntegerField(default=0)
-    timestampLastTimeWarnedAboutUpcomingAutoAccountDeletion = IntegerField(default=0)
-    timestampLastTimeBlockedBot = IntegerField(default=0)
-
-    def hasProbablyBlockedBot(self) -> bool:
-        if self.botBlockedCounter > 0:
-            return True
-        else:
-            return False
-
-    def hasProbablyBlockedBotForLongerTime(self) -> bool:
-        if self.botBlockedCounter >= 30:
-            return True
-        else:
-            return False
-
-    def isEligableForAutoDeletion(self):
-        """ If this returns True, upper handling is allowed to delete this account as it looks like it has been abandoned by the user. """
-        if self.hasProbablyBlockedBotForLongerTime():
-            return True
-        elif self.getSecondsUntilAccountDeletion() == 0 and self.timesInformedAboutUpcomingAutoAccountDeletion >= MAX_TIMES_INFORM_ABOUT_UPCOMING_AUTO_ACCOUNT_DELETION:
-            # Looks like user hasn't used this bot for a loong time. Only allow this to return true if user has been warned enough times in beforehand.
-            return True
-        else:
-            return False
-
-    def hasDefaultSettings(self) -> bool:
-
-        for settingKey, settingValue in self["settings"].items():
-            settingInfo = USER_SETTINGS_ON_OFF.get(settingKey)
-            if settingInfo is None:
-                # Ignore keys that aren't covered in our settings map
-                continue
-            elif settingValue != settingInfo['default']:
-                return False
-        # Check for custom sort modes
-        if self.hasStoredSortModes():
-            # User has used/saved custom sort modes
-            return False
-        # No non-default value found -> User has default settings
-        return True
-
-    def hasStoredSortModes(self) -> bool:
-        if self.couponViewSortModes is not None and len(self.couponViewSortModes) > 0:
-            # User has saved preferred sort modes
-            return True
-        else:
-            # User does not have any stored sort modes
-            return False
-
-    def hasFoundEasterEgg(self) -> bool:
-        if self.easterEggCounter > 0:
-            return True
-        else:
-            return False
-
-    def isFavoriteCoupon(self, coupon: Coupon):
-        """ Checks if given coupon is users' favorite """
-        return self.isFavoriteCouponID(coupon.id)
-
-    def isFavoriteCouponID(self, couponID: str):
-        if couponID in self.favoriteCoupons:
-            return True
-        else:
-            return False
-
-    def addFavoriteCoupon(self, coupon: Coupon):
-        self.favoriteCoupons[coupon.id] = coupon._data
-
-    def deleteFavoriteCoupon(self, coupon: Coupon):
-        self.deleteFavoriteCouponID(coupon.id)
-
-    def deleteFavoriteCouponID(self, couponID: str):
-        del self.favoriteCoupons[couponID]
-
-    def isAllowSendFavoritesNotification(self):
-        if self.settings.autoDeleteExpiredFavorites:
-            # User wants expired coupons to be auto-deleted so it is impossible to inform him about expired favourites that are back.
-            return False
-        elif self.settings.notifyWhenFavoritesAreBack:
-            # User wants to be informed about expired favourite coupons that are back.
-            return True
-        else:
-            # User does not want to be informed about expired favourite coupons that are back.
-            return False
-
-    def getPaybackCardNumber(self) -> Union[str, None]:
-        """ Returns Payback card number of users' [first] Payback card. """
-        """ Can this be considered a workaround or is the mapping made in a stupid way that it does not return "None" for keys without defined defaults??!
-          doing User.paybackCard.paybackCardNumber directly would raise an AttributeError!
-          Alternative would be to set empty String as default value. """
-        if len(self.paybackCard) > 0:
-            return self.paybackCard.paybackCardNumber
-        else:
-            return None
-
-    def getPaybackCardImage(self) -> bytes:
-        ean = EuropeanArticleNumber13(ean='240' + self.getPaybackCardNumber(), writer=ImageWriter())
-        file = BytesIO()
-        ean.write(file, options={'foreground': 'black'})
-        return file.getvalue()
-
-    def addPaybackCard(self, paybackCardNumber: str):
-        if self.paybackCard is None or len(self.paybackCard) == 0:
-            """ Workaround for Document bug/misbehavior. """
-            self['paybackCard'] = {}
-        self.paybackCard.paybackCardNumber = paybackCardNumber
-        self.paybackCard.addedDate = datetime.now()
-
-    def deletePaybackCard(self):
-        """ Deletes users' [first] Payback card. """
-        dummyUser = User()
-        self.paybackCard = dummyUser.paybackCard
-
-    def getUserFavoritesInfo(self, couponsFromDB: dict, returnSortedCoupons: bool) -> UserFavoritesInfo:
-        """
-        Gathers information about the given users' favorite available/unavailable coupons.
-        Coupons from DB are required to get current dataset of available favorites.
-        """
-        if len(self.favoriteCoupons) == 0:
-            # User does not have any favorites set --> There is no point to look for the additional information
-            return UserFavoritesInfo()
-        availableFavoriteCoupons = []
-        unavailableFavoriteCoupons = []
-        for uniqueCouponID, coupon in self.favoriteCoupons.items():
-            couponFromProductiveDB = couponsFromDB.get(uniqueCouponID)
-            if couponFromProductiveDB is not None and couponFromProductiveDB.isValid():
-                availableFavoriteCoupons.append(couponFromProductiveDB)
-            else:
-                # User chosen favorite coupon has expired or is not in DB
-                coupon = Coupon.wrap(coupon)  # We want a 'real' coupon object
-                unavailableFavoriteCoupons.append(coupon)
-        # Sort all coupon arrays by price
-        if returnSortedCoupons:
-            favoritesFilter = CouponViews.FAVORITES.getFilter()
-            availableFavoriteCoupons = sortCouponsAsList(availableFavoriteCoupons, favoritesFilter.sortCode)
-            unavailableFavoriteCoupons = sortCouponsAsList(unavailableFavoriteCoupons, favoritesFilter.sortCode)
-        return UserFavoritesInfo(favoritesAvailable=availableFavoriteCoupons,
-                                 favoritesUnavailable=unavailableFavoriteCoupons)
-
-    def getSortModeForCouponView(self, couponView: CouponView) -> CouponSortMode:
-        if self.couponViewSortModes is not None:
-            # User has at least one custom sortCode for one CouponView.
-            sortCode = self.couponViewSortModes.get(str(couponView.getViewCode()))
-            if sortCode is not None:
-                # User has saved SortMode for this CouponView.
-                return getSortModeBySortCode(sortCode=sortCode)
-            else:
-                # User does not have saved SortMode for this CouponView --> Return default
-                return getSortModeBySortCode(sortCode=couponView.couponfilter.sortCode)
-        else:
-            # User has no saved sortCode --> Return default
-            return getSortModeBySortCode(sortCode=couponView.couponfilter.sortCode)
-
-    def getNextSortModeForCouponView(self, couponView: CouponView) -> CouponSortMode:
-        currentSortMode = self.getSortModeForCouponView(couponView=couponView)
-        return getNextSortMode(currentSortMode=currentSortMode)
-
-    def setCustomSortModeForCouponView(self, couponView: CouponView, sortMode: CouponSortMode):
-        if self.couponViewSortModes is None or len(self.couponViewSortModes) == 0:
-            """ Workaround for stupid Document bug/misbehavior. """
-            self["couponViewSortModes"] = {}
-            # self.couponViewSortModes = {} --> This does not work
-        self.couponViewSortModes[str(couponView.getViewCode())] = sortMode.getSortCode()
-
-    def hasRecentlyUsedBot(self) -> bool:
-        if self.timestampLastTimeBotUsed == 0:
-            # User has never used bot - this is nearly impossible unless user has been manually added to DB.
-            return False
-        else:
-            currentTimestamp = getCurrentDate().timestamp()
-            if currentTimestamp - self.timestampLastTimeBotUsed < MAX_HOURS_ACTIVITY_TRACKING * 60 * 60:
-                return True
-            else:
-                return False
-
-    def hasEverUsedBot(self) -> bool:
-        """ Every user in DB should have used the bot at least once so this is kind of an ugly helper function which will return False
-         if DB values do not match current DB activity values e.g. due to DB changes.
-          Can especially be used to avoid sending account deletion notifications to users who are not eligable for auto account deletion. """
-        if self.timestampLastTimeBotUsed > 0:
-            return True
-        elif self.timestampLastTimeNotificationSentSuccessfully > 0:
-            return True
-        elif len(self.favoriteCoupons) > 0:
-            return True
-        elif self.getPaybackCardNumber() is not None:
-            return True
-        else:
-            return False
-
-    def updateActivityTimestamp(self, force: bool = False) -> bool:
-        if force or not self.hasRecentlyUsedBot():
-            self.timestampLastTimeBotUsed = getCurrentDate().timestamp()
-            # Reset this as user is active and is not about to be auto deleted
-            self.timesInformedAboutUpcomingAutoAccountDeletion = 0
-            # Reset this because user is using bot so it's obviously not blocked (anymore)
-            self.botBlockedCounter = 0
-            return True
-        else:
-            return False
-
-    def hasRecentlyReceivedBotNotification(self) -> bool:
-        if self.timestampLastTimeNotificationSentSuccessfully == 0:
-            # User has never received notification from bot.
-            return False
-        else:
-            currentTimestamp = getCurrentDate().timestamp()
-            if currentTimestamp - self.timestampLastTimeNotificationSentSuccessfully < MAX_HOURS_ACTIVITY_TRACKING * 60 * 60:
-                return True
-            else:
-                return False
-
-    def updateNotificationReceivedActivityTimestamp(self, force: bool = False) -> bool:
-        if force or not self.hasRecentlyReceivedBotNotification():
-            self.timestampLastTimeNotificationSentSuccessfully = getCurrentDate().timestamp()
-            # Reset this as user is active and is not about to be auto deleted
-            self.timesInformedAboutUpcomingAutoAccountDeletion = 0
-            # Reset this because user is using bot so it's obviously not blocked (anymore)
-            self.botBlockedCounter = 0
-            return True
-        else:
-            return False
-
-    def getSecondsUntilAccountDeletion(self) -> float:
-        secondsPassedSinceLastAccountActivity = self.getSecondsPassedSinceLastAccountActivity()
-        if secondsPassedSinceLastAccountActivity > MAX_SECONDS_WITHOUT_USAGE_UNTIL_AUTO_ACCOUNT_DELETION:
-            # Account can be deleted now
-            return 0
-        else:
-            # Account can be deleted in X seconds
-            return MAX_SECONDS_WITHOUT_USAGE_UNTIL_AUTO_ACCOUNT_DELETION - secondsPassedSinceLastAccountActivity
-
-    def getSecondsPassedSinceLastAccountActivity(self) -> float:
-        """ Returns smaller of these two values:
-         - Seconds passed since user used bot last time
-         - Seconds passed since bot sent user notification successfully last time
-         """
-        secondsPassedSinceLastUsage = self.getSecondsPassedSinceLastTimeUsed()
-        secondsPassedSinceLastNotificationSentSuccessfully = self.getSecondsPassedSinceLastTimeNotificationSentSuccessfully()
-        return min(secondsPassedSinceLastUsage, secondsPassedSinceLastNotificationSentSuccessfully)
-
-    def getSecondsPassedSinceLastTimeUsed(self) -> float:
-        return getCurrentDate().timestamp() - self.timestampLastTimeBotUsed
-
-    def getSecondsPassedSinceLastTimeNotificationSentSuccessfully(self) -> float:
-        return getCurrentDate().timestamp() - self.timestampLastTimeNotificationSentSuccessfully
-
-    def allowWarningAboutUpcomingAutoAccountDeletion(self) -> bool:
-        currentTimestampSeconds = getCurrentDate().timestamp()
-        if currentTimestampSeconds + MAX_SECONDS_WITHOUT_USAGE_UNTIL_AUTO_ACCOUNT_DELETION - self.timestampLastTimeBotUsed <= MAX_SECONDS_WITHOUT_USAGE_UNTIL_SEND_WARNING_TO_USER and currentTimestampSeconds - self.timestampLastTimeWarnedAboutUpcomingAutoAccountDeletion > MIN_SECONDS_BETWEEN_UPCOMING_AUTO_DELETION_WARNING and self.timesInformedAboutUpcomingAutoAccountDeletion < MAX_TIMES_INFORM_ABOUT_UPCOMING_AUTO_ACCOUNT_DELETION:
-            return True
-        else:
-            return False
-
-    def resetSettings(self):
-        dummyUser = User()
-        self.settings = dummyUser.settings
-        self.couponViewSortModes = {}
-
-
-class InfoEntry(Document):
-    dateLastSuccessfulChannelUpdate = DateTimeField()
-    dateLastSuccessfulCrawlRun = DateTimeField()
-    informationMessageID = TextField()
-    couponTypeOverviewMessageIDs = DictField(default={})
-    messageIDsToDelete = ListField(IntegerField(), default=[])
-    lastMaintenanceModeState = BooleanField()
-
-    def addMessageIDToDelete(self, messageID: int) -> bool:
-        # Avoid duplicates
-        if messageID not in self.messageIDsToDelete:
-            self.messageIDsToDelete.append(messageID)
-            return True
-        else:
-            return False
-
-    def addMessageIDsToDelete(self, messageIDs: List) -> bool:
-        containsAtLeastOneNewID = False
-        for messageID in messageIDs:
-            if self.addMessageIDToDelete(messageID):
-                containsAtLeastOneNewID = True
-        return containsAtLeastOneNewID
-
-    def addCouponCategoryMessageID(self, couponType: int, messageID: int):
-        self.couponTypeOverviewMessageIDs.setdefault(couponType, []).append(messageID)
-
-    def getMessageIDsForCouponCategory(self, couponType: int) -> List[int]:
-        return self.couponTypeOverviewMessageIDs.get(str(couponType), [])
-
-    def getAllCouponCategoryMessageIDs(self) -> List[int]:
-        messageIDs = []
-        for messageIDsTemp in self.couponTypeOverviewMessageIDs.values():
-            messageIDs += messageIDsTemp
-        return messageIDs
-
-    def deleteCouponCategoryMessageIDs(self, couponType: int):
-        if str(couponType) in self.couponTypeOverviewMessageIDs:
-            del self.couponTypeOverviewMessageIDs[str(couponType)]
-
-    def deleteAllCouponCategoryMessageIDs(self):
-        self.couponTypeOverviewMessageIDs = {}
-
-
-class ChannelCoupon(Document):
-    """ Represents a coupon posted in a Telegram channel.
-     Only contains minimum of required information as information about coupons itself is stored in another DB. """
-    uniqueIdentifier = TextField()
-    channelMessageID_image_and_qr_date_posted = DateTimeField()
-    channelMessageID_image = IntegerField()
-    channelMessageID_qr = IntegerField()
-    channelMessageID_text = IntegerField()
-    channelMessageID_text_date_posted = DateTimeField()
-
-    def getMessageIDs(self) -> List[int]:
-        messageIDs = []
-        if self.channelMessageID_image is not None:
-            messageIDs.append(self.channelMessageID_image)
-        if self.channelMessageID_qr is not None:
-            messageIDs.append(self.channelMessageID_qr)
-        if self.channelMessageID_text is not None:
-            messageIDs.append(self.channelMessageID_text)
-        return messageIDs
-
-    def deleteMessageIDs(self):
-        # Nullification
-        self.channelMessageID_image = None
-        self.channelMessageID_qr = None
-        self.channelMessageID_text = None
-
-    def getMessageIDForChatHyperlink(self) -> Union[None, int]:
-        return self.channelMessageID_image
 
 
 def getCouponsTotalPrice(coupons: List[Coupon]) -> float:
@@ -1202,6 +808,11 @@ USER_SETTINGS_ON_OFF = {
     "highlightVeggieCouponsInCouponButtonTexts": {
         "category": SettingCategories.COUPON_DISPLAY,
         "description": "Veggie Coupons in Buttons mit " + SYMBOLS.BROCCOLI + " markieren",
+        "default": True
+    },
+    "highlightChiliCheeseCouponsInCouponButtonTexts": {
+        "category": SettingCategories.COUPON_DISPLAY,
+        "description": "Chili Cheese Coupons in Buttons mit " + SYMBOLS.CHILI + " markieren",
         "default": True
     },
     "displayQR": {
