@@ -996,7 +996,7 @@ class BKBot:
         couponText = coupon.generateCouponLongTextFormattedWithDescription(highlightIfNew=True)
         if additionalText is not None:
             couponText += '\n' + additionalText
-        if user.settings.displayQR or coupon.forceDisplayQR():
+        if user.settings.displayQR or coupon.plu is None:
             # We need to send two images -> Send as album
             photoCoupon = InputMediaPhoto(media=self.getCouponImage(coupon), caption=couponText, parse_mode='HTML')
             photoQR = InputMediaPhoto(media=self.getCouponImageQR(coupon), caption=couponText, parse_mode='HTML')
@@ -1575,7 +1575,7 @@ class BKBot:
                             else:
                                 couponText = coupon.generateCouponShortTextFormattedWithHyperlinkToChannelPost(highlightIfNew=True,
                                                                                                                publicChannelName=self.getPublicChannelName(),
-                                                                                                               messageID=messageID, includeVeggieSymbol=True)
+                                                                                                               messageID=messageID)
                         else:
                             # This should never happen but we'll allow it to
                             logging.warning("Can't hyperlink coupon because no messageIDs available: " + coupon.id)
